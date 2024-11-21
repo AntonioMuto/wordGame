@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:word_game/home/pages/home_page.dart';
-import 'package:word_game/sign_in/bloc/sign_in_bloc.dart';
+import 'package:word_game/core/home/pages/home_page.dart';
+import 'package:word_game/core/sign_in/bloc/sign_in_bloc.dart';
 
 class SignInPage extends StatelessWidget {
   SignInPage({super.key});

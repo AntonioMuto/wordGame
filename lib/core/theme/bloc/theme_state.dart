@@ -7,11 +7,14 @@ class ThemeState {
 
   static ThemeState get darkTheme =>
       ThemeState(ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black
+        scaffoldBackgroundColor: Colors.black,
+        cardColor: const Color.fromARGB(255, 36, 36, 36),
+        
       ));
 
   static ThemeState get lightTheme =>
       ThemeState(ThemeData.light().copyWith(
-        scaffoldBackgroundColor: Colors.white
+        scaffoldBackgroundColor: Colors.white,
+        cardColor: Colors.white,
       ));
 }
