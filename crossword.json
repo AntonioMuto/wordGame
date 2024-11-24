@@ -48,22 +48,22 @@
       },
       {
         "type": "O",
-        "rif": "3",
-        "questionY": "3. in inglese si dice NEVER",
+        "rif": "4",
+        "questionY": "4. in inglese si dice NEVER",
         "answer": "M"
       }
     ],
     [
       {
         "type": "O",
-        "rif": "4",
-        "questionX": "4. La fai al supermercato",
+        "rif": "5",
+        "questionX": "5. La fai al supermercato",
         "answer": "S"
       },
       {
         "type": "O",
-        "rif": "5",
-        "questionY": "5. ricchezza di un paese",
+        "rif": "6",
+        "questionY": "6. ricchezza di un paese",
         "answer": "P"
       },
       {
@@ -82,8 +82,8 @@
     [
       {
         "type": "O",
-        "rif": "6",
-        "questionX": "6. risposta positiva",
+        "rif": "7",
+        "questionX": "7. risposta positiva",
         "answer": "S"
       },
       {
