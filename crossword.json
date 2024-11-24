@@ -47,7 +47,9 @@
         "answer": "O"
       },
       {
-        "type": "_",
+        "type": "O",
+        "rif": "3",
+        "questionY": "3. in inglese si dice NEVER",
         "answer": "M"
       }
     ],
