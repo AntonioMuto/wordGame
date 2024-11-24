@@ -13,12 +13,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       await Future.delayed(const Duration(seconds: 1));
 
       emit(HomeLoaded([
-        GameSection(name: "Classico", icon: Icons.star, level: 5, progress: 0.7),
-        GameSection(name: "A Tempo", icon: Icons.timer, level: 3, progress: 0.4),
-        GameSection(name: "Puzzle", icon: Icons.extension, level: 7, progress: 0.8),
-        GameSection(name: "Parole Difficili", icon: Icons.language, level: 2, progress: 0.2),
-        GameSection(name: "Sfida", icon: Icons.bolt, level: 6, progress: 0.9),
-        GameSection(name: "Allenamento", icon: Icons.fitness_center, level: 10, progress: 1.0),
+        GameSection(name: "Cruciverba", gameImage: "crossword", level: 123 , progress: 0.7,color: const Color.fromRGBO(56, 142, 60, 1)!),
+        GameSection(name: "Anagramma", gameImage: "anagram", level: 3, progress: 0.4, color: Colors.purple[700]!),
+        GameSection(name: "Trova la Parola", gameImage: "findword", level: 99, progress: 0.8, color: Colors.blue[700]!),
+        GameSection(name: "Cerca le Parole", gameImage: "searchword", level: 1283, progress: 0.2, color: Colors.red[700]!),
+        GameSection(name: "Sudoku", gameImage: "sudoku", level: 654, progress: 0.9, color: Colors.lightBlue[700]!),
+        GameSection(name: "Crucigramma", gameImage: "crucigram", level: 199, progress: 1.0, color: Colors.orange[700]!),
       ]));
     });
   }

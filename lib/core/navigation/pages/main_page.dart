@@ -43,30 +43,54 @@ class MainPage extends StatelessWidget {
             if (state is NavigationChangedState) {
               selectedIndex = state.selectedIndex;
             }
-
-            return BottomNavigationBar(
-              currentIndex: selectedIndex,
-              onTap: (index) {
-                context.read<NavigationBloc>().add(NavigationChanged(index));
-              },
-              items: const <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.account_circle),
-                  label: 'Profilo',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.notifications),
-                  label: 'Notizie',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings),
-                  label: 'Impostazioni',
-                ),
-              ],
+            return Container(                                             
+            decoration: const BoxDecoration(                                                   
+              borderRadius: BorderRadius.only(                                           
+                topRight: Radius.circular(30), topLeft: Radius.circular(30)),            
+              boxShadow: [                                                               
+                BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 10),       
+              ],                                                                         
+            ),     
+             child: ClipRRect(                                                            
+              borderRadius: BorderRadius.only(                                           
+              topLeft: Radius.circular(30.0),                                            
+              topRight: Radius.circular(30.0),                                           
+              ),                                                                         
+              child: BottomNavigationBar(
+                  currentIndex: selectedIndex,
+                  elevation: 1,
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: Colors.grey[700],
+                  selectedItemColor: Colors.amber[800],
+                  selectedLabelStyle: const TextStyle(fontSize: 14),
+                  selectedIconTheme: IconThemeData(size: 28),
+                  unselectedIconTheme: IconThemeData(size: 18),
+                  enableFeedback: false,
+                  unselectedLabelStyle: const TextStyle(fontSize: 12),
+                  unselectedItemColor: Colors.white,
+                  onTap: (index) {
+                    context.read<NavigationBloc>().add(NavigationChanged(index));
+                  },
+                  items: const <BottomNavigationBarItem>[
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.account_circle),
+                      label: 'Profilo',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.notifications),
+                      label: 'Notizie',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.settings),
+                      label: 'Impostazioni',
+                    ),
+                  ],
+                  )
+              ),
             );
           },
         ),

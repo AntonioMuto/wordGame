@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 
 class GameSection {
   final String name;
-  final IconData icon;
+  final String gameImage;
   final int level;
   final double progress;
+  final Color color;
 
   GameSection({
     required this.name,
-    required this.icon,
+    required this.gameImage,
     required this.level,
     required this.progress,
+    required this.color,
   });
 }
