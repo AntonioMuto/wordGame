@@ -4,125 +4,125 @@
   "map": [
     [
       {
-       "type": "O",
-       "rif": "1",
-       "questionX": "1. Capitale d'Italia",
-       "questionY": "1. il colore del pianeta Marte",
-       "answer": "R" 
+        "type": "O",
+        "rif": "1",
+        "questionX": "1. Capitale d'Italia",
+        "questionY": "1. il colore del pianeta Marte",
+        "answer": "R"
       },
       {
-       "type": "_",
-       "answer": "M" 
+        "type": "_",
+        "answer": "M"
       },
       {
-       "type": "X",
+        "type": "X"
       }
     ],
     [
       {
-       "type": "O",
-       "rif": "2",
-       "questionY": "2. vi si trasforma il principe",
-       "answer": "R" 
+        "type": "O",
+        "rif": "2",
+        "questionY": "2. vi si trasforma il principe",
+        "answer": "R"
       },
       {
-       "type": "X",
+        "type": "X"
       },
       {
-       "type": "_",
-       "answer": "O" 
+        "type": "_",
+        "answer": "O"
       },
       {
-       "type": "X",
+        "type": "X"
       },
       {
-       "type": "O",
-       "rif": "3",
-       "questionX": "3. All'inizio di Romania",
-       "questionY": "3. Sovrano nobile",
-       "answer": "R" 
+        "type": "O",
+        "rif": "3",
+        "questionX": "3. All'inizio di Romania",
+        "questionY": "3. Sovrano nobile",
+        "answer": "R"
       },
       {
-       "type": "_",
-       "answer": "O" 
+        "type": "_",
+        "answer": "O"
       },
       {
-       "type": "_",
-       "answer": "M" 
+        "type": "_",
+        "answer": "M"
       }
     ],
     [
       {
-       "type": "O",
-       "rif": "4",
-       "questionX": "4. La fai al supermercato",
-       "answer": "S" 
+        "type": "O",
+        "rif": "4",
+        "questionX": "4. La fai al supermercato",
+        "answer": "S"
       },
       {
-       "type": "O",
-       "rif": "5",
-       "questionY": "5. ricchezza di un paese",
-       "answer": "P" 
+        "type": "O",
+        "rif": "5",
+        "questionY": "5. ricchezza di un paese",
+        "answer": "P"
       },
       {
-       "type": "_",
-       "answer": "E" 
+        "type": "_",
+        "answer": "E"
       },
       {
-       "type": "_",
-       "answer": "S" 
+        "type": "_",
+        "answer": "S"
       },
       {
-       "type": "_",
-       "answer": "A" 
+        "type": "_",
+        "answer": "A"
       }
     ],
     [
       {
-       "type": "O",
-       "rif": "6",
-       "questionX": "6. risposta positiva",
-       "answer": "S" 
+        "type": "O",
+        "rif": "6",
+        "questionX": "6. risposta positiva",
+        "answer": "S"
       },
       {
-       "type": "_",
-       "answer": "I" 
+        "type": "_",
+        "answer": "I"
       },
       {
-       "type": "X",
+        "type": "X"
       },
       {
-       "type": "O",
-       "rif": "8",
-       "questionX": "8. va prima del greco",
-       "answer": "P" 
+        "type": "O",
+        "rif": "8",
+        "questionX": "8. va prima del greco",
+        "answer": "P"
       },
       {
-       "type": "_",
-       "answer": "I" 
+        "type": "_",
+        "answer": "I"
       }
     ],
     [
       {
-       "type": "O",
-       "rif": "9",
-       "questionX": "9. può essere d'arachidi",
-       "answer": "O" 
+        "type": "O",
+        "rif": "9",
+        "questionX": "9. può essere d'arachidi",
+        "answer": "O"
       },
       {
-       "type": "_",
-       "answer": "L" 
+        "type": "_",
+        "answer": "L"
       },
       {
-       "type": "_",
-       "answer": "I" 
+        "type": "_",
+        "answer": "I"
       },
       {
-       "type": "_",
-       "answer": "O" 
+        "type": "_",
+        "answer": "O"
       },
       {
-       "type": "X",
+        "type": "X"
       }
     ]
   ]
