@@ -6,11 +6,12 @@ sealed class CrosswordState {}
 final class CrosswordInitial extends CrosswordState {}
 
 final class CrosswordLoaded extends CrosswordState {
-  final List<List<String>> crosswordData;
+  final List<List<CrosswordCell>> crosswordData;
   final int? selectedRow;
   final int? selectedCol;
   final List<List<int>> highlightedCells;
   final bool isHorizontal;
+  final String? definition;
 
   CrosswordLoaded({
     required this.crosswordData,
@@ -18,14 +19,16 @@ final class CrosswordLoaded extends CrosswordState {
     this.selectedCol,
     this.highlightedCells = const [],
     this.isHorizontal = true, // Di default orizzontale
+    this.definition
   });
 
   CrosswordLoaded copyWith({
-    List<List<String>>? crosswordData,
+    List<List<CrosswordCell>>? crosswordData,
     int? selectedRow,
     int? selectedCol,
     List<List<int>>? highlightedCells,
     bool? isHorizontal,
+    String? definition
   }) {
     return CrosswordLoaded(
       crosswordData: crosswordData ?? this.crosswordData,
@@ -33,6 +36,7 @@ final class CrosswordLoaded extends CrosswordState {
       selectedCol: selectedCol ?? this.selectedCol,
       highlightedCells: highlightedCells ?? this.highlightedCells,
       isHorizontal: isHorizontal ?? this.isHorizontal,
+      definition: definition ?? this.definition
     );
   }
 }

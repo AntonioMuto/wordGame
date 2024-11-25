@@ -1,12 +1,16 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
+import 'dart:convert'; // Per decodificare la risposta JSON
+import 'package:http/http.dart' as http;
+import 'package:word_game/data_models/CrossWordCell.dart';
 
 part 'crossword_event.dart';
 part 'crossword_state.dart';
 
 class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
-  CrosswordBloc(List<List<String>> initialData)
+  CrosswordBloc(List<List<CrosswordCell>> initialData)
       : super(CrosswordLoaded(crosswordData: initialData)) {
+    on<FetchCrosswordData>(_onFetchCrosswordData);
     on<SelectCellEvent>(_onSelectCell);
     on<InsertLetterEvent>(_onInsertLetter);
     on<RemoveLetterEvent>(_onRemoveLetter);
@@ -17,6 +21,10 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
   void _onSelectCell(SelectCellEvent event, Emitter<CrosswordState> emit) {
   if (state is CrosswordLoaded) {
     final loadedState = state as CrosswordLoaded;
+
+    if(loadedState.crosswordData[event.row][event.col].isCorrect != null && loadedState.crosswordData[event.row][event.col].isCorrect!) {
+      return;
+    }
 
     // Controlla se la cella selezionata è la stessa
     final isSameCell = loadedState.selectedRow == event.row && loadedState.selectedCol == event.col;
@@ -47,12 +55,24 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     // Trova tutte le celle della parola selezionata (orizzontale o verticale)
     final highlightedCells = findWordCells(event.row, event.col, loadedState.crosswordData, isHorizontal);
 
+    String definition = "";
+
+    if(highlightedCells.isNotEmpty) {
+      var cellDef = loadedState.crosswordData[highlightedCells[0][0]][highlightedCells[0][1]];
+      if(isHorizontal){
+        definition = cellDef.questionX ?? "";
+      } else {
+        definition = cellDef.questionY ?? "";
+      }
+    }
+
     // Emitti un nuovo stato con la selezione aggiornata e le celle evidenziate
     emit(loadedState.copyWith(
       selectedRow: event.row,
       selectedCol: event.col,
       highlightedCells: highlightedCells,
       isHorizontal: isHorizontal,
+      definition: definition
     ));
   }
 }
@@ -63,31 +83,38 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
       final loadedState = state as CrosswordLoaded;
 
       // Copia immutabile della griglia
-      final updatedData = List<List<String>>.from(
-        loadedState.crosswordData.map((row) => List<String>.from(row)),
+      final updatedData = List<List<CrosswordCell>>.from(
+        loadedState.crosswordData.map((row) => List<CrosswordCell>.from(row)),
       );
 
       // Aggiorna solo la cella selezionata
-      if (loadedState.selectedRow != null && loadedState.selectedCol != null && loadedState.selectedRow! >= 0 && loadedState.selectedCol! >= 0) {
+      if (loadedState.selectedRow! >= 0 && loadedState.selectedCol! >= 0) {
         int? row = loadedState.selectedRow!;
         int? col = loadedState.selectedCol!;
-        updatedData[row][col] = event.letter.toUpperCase();
+        updatedData[row][col].value = event.letter.toUpperCase();
         if(loadedState.isHorizontal) {
           col = col + 1;
+          while (col! < loadedState.crosswordData[col-1].length && loadedState.crosswordData[row][col].isCorrect) {
+            col = col + 1;
+          }
         } else {
           row = row + 1;
+          while (row! < loadedState.crosswordData[row-1].length && loadedState.crosswordData[row][col].isCorrect) {
+            row = row + 1;
+          }
         }
-        if(row >= loadedState.crosswordData[row-1].length || col >= loadedState.crosswordData[col-1].length) {
-          emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: -1, selectedCol: -1, highlightedCells: []));
+        var status = checkWords(updatedData, loadedState.highlightedCells);
+        if((row > 0 && row >= loadedState.crosswordData[row-1].length) || (col > 0 && col >= loadedState.crosswordData[col-1].length)) {
+          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition));
           return;
         }
-        if(loadedState.crosswordData[row][col] == "X") {
-          emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: -1, selectedCol: -1, highlightedCells: []));
+        if(loadedState.crosswordData[row][col].type == "X" || loadedState.crosswordData[row][col].isCorrect) {
+          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition));
           return;
         }
 
         // Emette il nuovo stato con la griglia aggiornata
-        emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: row, selectedCol: col));
+        emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: status['isCorrect'] ? -1 : row, selectedCol: status['isCorrect'] ? -1 : col, highlightedCells: status['isCorrect'] ? [] : loadedState.highlightedCells, definition: status['isCorrect'] ? '' : loadedState.definition));
       }
     }
   }
@@ -96,28 +123,30 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     if(state is CrosswordLoaded) {
       final loadedState = state as CrosswordLoaded;
 
-      final updatedData = List<List<String>>.from(
-        loadedState.crosswordData.map((row) => List<String>.from(row)),
+      final updatedData = List<List<CrosswordCell>>.from(
+        loadedState.crosswordData.map((row) => List<CrosswordCell>.from(row)),
       );
-
-      int? row = loadedState.selectedRow!;
-      int? col = loadedState.selectedCol!;
-      updatedData[row][col] = "";
-      if(loadedState.isHorizontal) {
-          col = col - 1;
-      } else {
-          row = row - 1;
-      }
-        if(row < 0 || col < 0) {
-          emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: -1, selectedCol: -1, highlightedCells: []));
-          return;
+      
+      if(loadedState.selectedRow != null && loadedState.selectedCol != null && loadedState.selectedRow! >= 0 && loadedState.selectedCol! >= 0) {
+        int? row = loadedState.selectedRow!;
+        int? col = loadedState.selectedCol!;
+        updatedData[row][col].value = "";
+        if(loadedState.isHorizontal) {
+            col = col - 1;
+        } else {
+            row = row - 1;
         }
-        if(loadedState.crosswordData[row][col] == "X") {
-          emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: -1, selectedCol: -1, highlightedCells: []));
-          return;
-        }
+          if(row < 0 || col < 0) {
+            emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: -1, selectedCol: -1, highlightedCells: []));
+            return;
+          }
+          if(loadedState.crosswordData[row][col].type == "X") {
+            emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: -1, selectedCol: -1, highlightedCells: []));
+            return;
+          }
 
-      emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: row, selectedCol: col));
+        emit(loadedState.copyWith(crosswordData: updatedData, selectedRow: row, selectedCol: col));
+        }
     }
   }
 
@@ -126,30 +155,60 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     if(state is CrosswordLoaded) {
       final loadedState = state as CrosswordLoaded;
 
-      final updatedData = List<List<String>>.from(
-        loadedState.crosswordData.map((row) => List<String>.from(row)),
+      final updatedData = List<List<CrosswordCell>>.from(
+        loadedState.crosswordData.map((row) => List<CrosswordCell>.from(row)),
       );
 
-      loadedState.highlightedCells.forEach((cell) {
-        updatedData[cell[0]][cell[1]] = "";
-      });
+      for (var cell in loadedState.highlightedCells) {
+        updatedData[cell[0]][cell[1]].value = "";
+      }
 
       emit(loadedState.copyWith(crosswordData: updatedData));
     }
   }
 
-  List<List<int>> findWordCells(int row, int col, List<List<String>> crosswordData, bool isHorizontal) {
+  Future<void> _onFetchCrosswordData(
+    FetchCrosswordData event, Emitter<CrosswordState> emit) async {
+  emit(CrosswordInitial()); // Stato iniziale mentre si attendono i dati
+
+  try {
+    // URL dell'API
+    final url = Uri.parse('https://raw.githubusercontent.com/AntonioMuto/wordGame/refs/heads/main/crossword.json');
+
+    // Chiamata GET all'API
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      // Decodifica la risposta JSON
+      final jsonData = jsonDecode(response.body);
+
+      // Parsing dei dati in una struttura List<List<CrosswordCell>>
+      final crosswordData = _parseCrosswordData(jsonData);
+
+      // Emetti lo stato con i dati ricevuti
+      emit(CrosswordLoaded(crosswordData: crosswordData));
+    } else {
+      // Errore nella risposta
+      throw Exception('Errore nella risposta del server: ${response.statusCode}');
+    }
+  } catch (e) {
+    // Emette uno stato di errore
+    emit(CrosswordError('Errore nel caricamento dei dati: $e'));
+    print(e);
+  }
+}
+
+  List<List<int>> findWordCells(int row, int col, List<List<CrosswordCell>> crosswordData, bool isHorizontal) {
     final List<List<int>> wordCells = [];
 
     if (isHorizontal) {
       // Trova la parola orizzontale a partire da (row, col)
       int startCol = col;
-      while (startCol - 1 >= 0 && crosswordData[row][startCol - 1] != "X") {
+      while (startCol - 1 >= 0 && crosswordData[row][startCol - 1].type != "X") {
         startCol--;
       }
 
       int endCol = col;
-      while (endCol + 1 < crosswordData[row].length && crosswordData[row][endCol + 1] != "X") {
+      while (endCol + 1 < crosswordData[row].length && crosswordData[row][endCol + 1].type != "X") {
         endCol++;
       }
 
@@ -160,12 +219,12 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     } else {
       // Trova la parola verticale a partire da (row, col)
       int startRow = row;
-      while (startRow - 1 >= 0 && crosswordData[startRow - 1][col] != "X") {
+      while (startRow - 1 >= 0 && crosswordData[startRow - 1][col].type != "X") {
         startRow--;
       }
 
       int endRow = row;
-      while (endRow + 1 < crosswordData.length && crosswordData[endRow + 1][col] != "X") {
+      while (endRow + 1 < crosswordData.length && crosswordData[endRow + 1][col].type != "X") {
         endRow++;
       }
 
@@ -178,28 +237,28 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     return wordCells;
   }
 
-  bool canSelectVerticalWord(int row, int col, List<List<String>> crosswordData) {
+  bool canSelectVerticalWord(int row, int col, List<List<CrosswordCell>> crosswordData) {
   // Verifica se la cella sopra è un "X" o fuori limite
-  if (row - 1 >= 0 && crosswordData[row - 1][col] != "X") {
+  if (row - 1 >= 0 && crosswordData[row - 1][col].type != "X") {
     return true; // Se c'è una cella sopra non è l'inizio di una parola verticale
   }
 
   // Verifica se la cella sotto è una casella bianca o fuori limite
-  if (row + 1 < crosswordData.length && crosswordData[row + 1][col] != "X") {
+  if (row + 1 < crosswordData.length && crosswordData[row + 1][col].type != "X") {
     return true; // Se la cella sotto è bianca, posso continuare verticalmente
   }
 
   return false; // Altrimenti, non è possibile una parola verticale
 }
 
-bool canSelectHorizontalWord(int row, int col, List<List<String>> crosswordData) {
+bool canSelectHorizontalWord(int row, int col, List<List<CrosswordCell>> crosswordData) {
   // Verifica se la cella a sinistra è un "X" o fuori limite
-  if (col - 1 >= 0 && crosswordData[row][col - 1] != "X") {
+  if (col - 1 >= 0 && crosswordData[row][col - 1].type != "X") {
     return true; // Se c'è una cella a sinistra non è l'inizio di una parola orizzontale
   }
 
   if (col + 1 < crosswordData[row].length) {
-    if (crosswordData[row][col + 1] != "X") {
+    if (crosswordData[row][col + 1].type != "X") {
       return true; // Se la cella a destra è bianca, posso continuare orizzontalmente
     }
     return false;
@@ -208,6 +267,49 @@ bool canSelectHorizontalWord(int row, int col, List<List<String>> crosswordData)
   return false; // Altrimenti, non è possibile una parola orizzontale
 }
 
+List<List<CrosswordCell>> _parseCrosswordData(Map<String, dynamic> json) {
+  final map = json['map'] as List;
+  final sizeMapX = json['sizeMapX'] as int;
+  final sizeMapY = json['sizeMapY'] as int;
+
+  // Creazione di una griglia vuota di celle
+  final crosswordData = List<List<CrosswordCell>>.generate(
+    sizeMapY,
+    (_) => List<CrosswordCell>.filled(sizeMapX, CrosswordCell(type: "X", isCorrect: false)),
+  );
+  for (var row = 0; row < map.length; row++) {
+    for (var col = 0; col < map[row].length; col++) {
+      crosswordData[row][col] = CrosswordCell.fromJson(map[row][col]);
+    }
+    
+  }
+
+  return crosswordData;
+}
+
+  Map<String, dynamic> checkWords(List<List<CrosswordCell>> crosswordData, List<List<int>> highlightedCells) {
+    var crosswordCopy = crosswordData.map((row) => row.map((cell) => cell.copy()).toList()).toList();
+    
+    var isCorrect = true;
+    for (var cell in highlightedCells) {
+      int row = cell[0];
+      int col = cell[1];
+      if (crosswordData[row][col].value == crosswordData[row][col].answer) {
+        crosswordCopy[row][col].isCorrect = true;
+      } else {
+        crosswordCopy[row][col].isCorrect = false;
+        isCorrect = false;
+      }
+    }
+    if(isCorrect) {
+      crosswordData = crosswordCopy;
+    }
+    var status = {
+      "isCorrect": isCorrect,
+      "crosswordData": crosswordData
+    };
+    return status;
+  }  
 
 }
 

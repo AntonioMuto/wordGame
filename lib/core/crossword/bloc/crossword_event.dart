@@ -25,3 +25,11 @@ class ResetWordEvent extends CrosswordEvent {
 
   ResetWordEvent();
 }
+
+class FetchCrosswordData extends CrosswordEvent {}
+
+final class CrosswordError extends CrosswordState {
+  final String message;
+
+  CrosswordError(this.message);
+}
