@@ -22,7 +22,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
   if (state is CrosswordLoaded) {
     final loadedState = state as CrosswordLoaded;
 
-    if(loadedState.crosswordData[event.row][event.col].isCorrect != null && loadedState.crosswordData[event.row][event.col].isCorrect!) {
+    if(loadedState.crosswordData[event.row][event.col].isCorrect!) {
       return;
     }
 
@@ -54,6 +54,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
 
     // Trova tutte le celle della parola selezionata (orizzontale o verticale)
     final highlightedCells = findWordCells(event.row, event.col, loadedState.crosswordData, isHorizontal);
+    final highlightedCellsSecondary = findWordCells(event.row, event.col, loadedState.crosswordData, !isHorizontal);
 
     String definition = "";
 
@@ -71,6 +72,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
       selectedRow: event.row,
       selectedCol: event.col,
       highlightedCells: highlightedCells,
+      highlightedCellsSecondary: highlightedCellsSecondary,
       isHorizontal: isHorizontal,
       definition: definition
     ));
@@ -103,18 +105,23 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
             row = row + 1;
           }
         }
-        var status = checkWords(updatedData, loadedState.highlightedCells);
+        var status = checkWords(updatedData, loadedState.highlightedCells, loadedState.highlightedCellsSecondary);
+        
         if((row > 0 && row >= loadedState.crosswordData[row-1].length) || (col > 0 && col >= loadedState.crosswordData[col-1].length)) {
-          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition));
+          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition, completed: status['completed'] ? true : false));
           return;
         }
         if(loadedState.crosswordData[row][col].type == "X" || loadedState.crosswordData[row][col].isCorrect) {
-          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition));
+          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition, completed: status['completed'] ? true : false));
           return;
         }
+        bool isHorizontal = loadedState.isHorizontal;
+
+        final highlightedCells = findWordCells(row, col, loadedState.crosswordData, isHorizontal);
+        final highlightedCellsSecondary = findWordCells(row, col, loadedState.crosswordData, !isHorizontal);
 
         // Emette il nuovo stato con la griglia aggiornata
-        emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: status['isCorrect'] ? -1 : row, selectedCol: status['isCorrect'] ? -1 : col, highlightedCells: status['isCorrect'] ? [] : loadedState.highlightedCells, definition: status['isCorrect'] ? '' : loadedState.definition));
+        emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: status['isCorrect'] ? -1 : row, selectedCol: status['isCorrect'] ? -1 : col, highlightedCells: status['isCorrect'] ? [] : highlightedCells, definition: status['isCorrect'] ? '' : loadedState.definition, highlightedCellsSecondary: status['isCorrect'] ? [] : highlightedCellsSecondary, completed: status['completed'] ? true : false));
       }
     }
   }
@@ -287,29 +294,80 @@ List<List<CrosswordCell>> _parseCrosswordData(Map<String, dynamic> json) {
   return crosswordData;
 }
 
-  Map<String, dynamic> checkWords(List<List<CrosswordCell>> crosswordData, List<List<int>> highlightedCells) {
-    var crosswordCopy = crosswordData.map((row) => row.map((cell) => cell.copy()).toList()).toList();
-    
-    var isCorrect = true;
-    for (var cell in highlightedCells) {
-      int row = cell[0];
-      int col = cell[1];
-      if (crosswordData[row][col].value == crosswordData[row][col].answer) {
-        crosswordCopy[row][col].isCorrect = true;
-      } else {
-        crosswordCopy[row][col].isCorrect = false;
-        isCorrect = false;
+  Map<String, dynamic> checkWords(List<List<CrosswordCell>> crosswordData, List<List<int>> highlightedCells, List<List<int>> highlightedCellsSecondary) {
+      var crosswordCopyPrimary = crosswordData.map((row) => row.map((cell) => cell.copy()).toList()).toList();
+      var crosswordCopySecondary = crosswordData.map((row) => row.map((cell) => cell.copy()).toList()).toList();
+
+      var isCorrectPrimary = false;
+      var isCorrectSecondary = false;
+
+      var everyPrimaryWordIsCorrect = true;
+      var everySecondaryWordIsCorrect = true;
+
+      var completed = true;
+
+      // Verifica delle parole secondarie
+      if (highlightedCellsSecondary.length > 1) {
+        for (var cell in highlightedCellsSecondary) {
+          int row = cell[0];
+          int col = cell[1];
+          if (crosswordData[row][col].value == crosswordData[row][col].answer) {
+            crosswordCopySecondary[row][col].isCorrect = true;
+          } else {
+            crosswordCopySecondary[row][col].isCorrect = false;
+            everySecondaryWordIsCorrect = false;
+          }
+        }
       }
+      isCorrectSecondary = everySecondaryWordIsCorrect;
+
+      // Verifica delle parole principali
+        for (var cell in highlightedCells) {
+          int row = cell[0];
+          int col = cell[1];
+          if (crosswordData[row][col].value == crosswordData[row][col].answer) {
+            crosswordCopyPrimary[row][col].isCorrect = true;
+          } else {
+            crosswordCopyPrimary[row][col].isCorrect = false;
+            everyPrimaryWordIsCorrect = false;
+          }
+        }
+      isCorrectPrimary = everyPrimaryWordIsCorrect;
+
+      // Merge dei dati se entrambe le verifiche sono corrette
+      if (isCorrectPrimary && isCorrectSecondary) {
+        for (int y = 0; y < crosswordData.length; y++) {
+          for (int x = 0; x < crosswordData[y].length; x++) {
+            if (crosswordCopyPrimary[y][x].isCorrect || crosswordCopySecondary[y][x].isCorrect) {
+              crosswordData[y][x] = crosswordCopyPrimary[y][x].copy();
+              crosswordData[y][x].isCorrect = true;
+            }
+          }
+        }
+      } else {
+        // Usa il risultato corretto se disponibile
+        if (isCorrectPrimary) {
+          crosswordData = crosswordCopyPrimary;
+        } else if (isCorrectSecondary) {
+          crosswordData = crosswordCopySecondary;
+        }
+      }
+
+      for (int y = 0; y < crosswordData.length; y++) {
+        for (int x = 0; x < crosswordData[y].length; x++) {
+          if (crosswordData[y][x].type != "X" && !crosswordData[y][x].isCorrect) {
+            completed = false;
+          }
+        }
+      }
+
+      var status = {
+        "isCorrect": isCorrectPrimary,
+        "crosswordData": crosswordData,
+        "completed": completed
+      };
+      return status;
     }
-    if(isCorrect) {
-      crosswordData = crosswordCopy;
-    }
-    var status = {
-      "isCorrect": isCorrect,
-      "crosswordData": crosswordData
-    };
-    return status;
-  }  
 
 }
 

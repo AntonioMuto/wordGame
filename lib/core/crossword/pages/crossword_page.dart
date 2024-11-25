@@ -123,7 +123,12 @@ class CrosswordPage extends StatelessWidget {
               child: BlocBuilder<CrosswordBloc, CrosswordState>(
                 builder: (context, state) {
                   if (state is CrosswordLoaded) {
-                    return Text(state.definition ?? '');
+                    return Column(
+                      children: [
+                        Text(state.definition ?? ''),
+                        Text(state.completed.toString()),
+                      ],
+                    );
                   }
                   return Text("");
                 })),

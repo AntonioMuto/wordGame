@@ -10,16 +10,20 @@ final class CrosswordLoaded extends CrosswordState {
   final int? selectedRow;
   final int? selectedCol;
   final List<List<int>> highlightedCells;
+  final List<List<int>> highlightedCellsSecondary;
   final bool isHorizontal;
   final String? definition;
+  final bool completed;
 
   CrosswordLoaded({
     required this.crosswordData,
     this.selectedRow,
     this.selectedCol,
     this.highlightedCells = const [],
+    this.highlightedCellsSecondary = const [],
     this.isHorizontal = true, // Di default orizzontale
-    this.definition
+    this.definition,
+    this.completed = false
   });
 
   CrosswordLoaded copyWith({
@@ -27,16 +31,20 @@ final class CrosswordLoaded extends CrosswordState {
     int? selectedRow,
     int? selectedCol,
     List<List<int>>? highlightedCells,
+    List<List<int>>? highlightedCellsSecondary,
     bool? isHorizontal,
-    String? definition
+    String? definition,
+    bool? completed
   }) {
     return CrosswordLoaded(
       crosswordData: crosswordData ?? this.crosswordData,
       selectedRow: selectedRow ?? this.selectedRow,
       selectedCol: selectedCol ?? this.selectedCol,
       highlightedCells: highlightedCells ?? this.highlightedCells,
+      highlightedCellsSecondary: highlightedCellsSecondary ?? this.highlightedCellsSecondary,
       isHorizontal: isHorizontal ?? this.isHorizontal,
-      definition: definition ?? this.definition
+      definition: definition ?? this.definition,
+      completed: completed ?? this.completed
     );
   }
 }
