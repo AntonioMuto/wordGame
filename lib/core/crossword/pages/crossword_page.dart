@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
 import 'package:word_game/core/crossword/pages/keyboard.dart';
 import 'package:word_game/data_models/CrossWordCell.dart';
@@ -10,8 +12,16 @@ class CrosswordPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => CrosswordBloc([])..add(FetchCrosswordData()), // Fetch dei dati
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => CrosswordBloc([])..add(FetchCrosswordData()), // Bloc del cruciverba
+        ),
+        BlocProvider(
+          create: (_) => AdsBloc()..add(LoadBannerAdEvent()), // Bloc degli annunci
+        ),
+      ],
+
       child: Scaffold(
         appBar: AppBar(
           title: Text('Cruciverba $level'),
@@ -31,7 +41,7 @@ class CrosswordPage extends StatelessWidget {
                     final cols = state.crosswordData[0].length;
 
                     return Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(15.0),
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: cols,
@@ -54,6 +64,7 @@ class CrosswordPage extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Colors.black,
                                 border: Border.all(color: Colors.black, width: 1),
+                                borderRadius: BorderRadius.circular(5.0),
                               ),
                             );
                           } else {
@@ -69,6 +80,7 @@ class CrosswordPage extends StatelessWidget {
                                           ? Colors.grey
                                           : Colors.white,
                                   border: Border.all(color: Colors.black, width: 1),
+                                  borderRadius: BorderRadius.circular(5.0)
                                 ),
                                 child: Stack(
                                   children: [
@@ -96,6 +108,7 @@ class CrosswordPage extends StatelessWidget {
                                         cell.value?.isEmpty == true ? "" : cell.value!,
                                         style: TextStyle(
                                           fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                           color: cell.isCorrect == true ? Colors.green[800] : Colors.black,
                                         ),
                                       ),
@@ -125,17 +138,58 @@ class CrosswordPage extends StatelessWidget {
                   if (state is CrosswordLoaded) {
                     return Column(
                       children: [
-                        Text(state.definition ?? ''),
-                        Text(state.completed.toString()),
+                        (state.definition != '' && state.definition != null) ? Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 1, ),
+                              borderRadius: BorderRadius.circular(10.0),
+                              color: Colors.yellow
+                            ),
+                            child: Center(
+                              child: Text(
+                                state.definition ?? "",
+                                style: TextStyle(
+                                  fontSize: 18,
+                              )),
+                            )
+                          ),
+                        ) : Container(),
                       ],
                     );
                   }
                   return Text("");
                 })),
+                
             // Tastiera
             Expanded(
               flex: 1,
-              child: Keyboard(),
+              child: Column(
+                children: [
+                  // BlocBuilder<AdsBloc, AdsState>(
+                  //   builder: (context, state) {
+                  //     if (state is AdsLoading) {
+                  //       return Center(child: CircularProgressIndicator());
+                  //     } else if (state is BannerAdLoaded) {
+                  //       // Mostra il banner ad
+                  //       return Container(
+                  //         height: state.bannerAd.size.height.toDouble(),
+                  //         width: state.bannerAd.size.width.toDouble(),
+                  //         child: AdWidget(ad: state.bannerAd), // Widget per mostrare il banner
+                  //       );
+                  //     } else if (state is BannerAdFailed) {
+                  //       // Mostra un messaggio di errore se il caricamento fallisce
+                  //       return Center(child: Text('Errore: ${state.error}'));
+                  //     } else {
+                  //       return SizedBox.shrink(); // Stato iniziale o inattivo
+                  //     }
+                  //   },
+                  // ),
+                  Keyboard(),
+                ],
+              ),
             ),
           ],
         ),

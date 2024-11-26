@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:word_game/core/home/bloc/home_bloc.dart';
 import 'package:word_game/core/home/pages/home_page.dart';
 import 'package:word_game/core/navigation/bloc/navigation_bloc.dart';
@@ -9,7 +12,11 @@ import 'package:word_game/core/sign_in/pages/sign_in_page.dart';
 
 import 'core/theme/bloc/theme_bloc.dart';
 
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  unawaited(MobileAds.instance.initialize());
+
   runApp(const MyApp());
 }
 
