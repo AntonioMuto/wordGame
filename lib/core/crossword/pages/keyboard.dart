@@ -58,6 +58,7 @@ class Keyboard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[200], // Colore chiaro per i tasti
+                 border: Border.all(color: Colors.black, width: 0.5),
                 borderRadius: BorderRadius.circular(8.0),
                 boxShadow: const [
                   BoxShadow(
@@ -68,7 +69,7 @@ class Keyboard extends StatelessWidget {
                 ],
               ),
               width: letter == 'delete' || letter == 'clean' ? buttonSize * 1.4 : buttonSize ,
-              height: buttonSize,
+              height: buttonSize + 10,
               child: Center(
                 child: letter == 'delete'
                     ? const Icon(

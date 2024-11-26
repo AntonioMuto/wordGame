@@ -22,7 +22,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
   if (state is CrosswordLoaded) {
     final loadedState = state as CrosswordLoaded;
 
-    if(loadedState.crosswordData[event.row][event.col].isCorrect!) {
+    if(loadedState.crosswordData[event.row][event.col].isCorrect) {
       return;
     }
 
@@ -108,11 +108,11 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
         var status = checkWords(updatedData, loadedState.highlightedCells, loadedState.highlightedCellsSecondary);
         
         if((row > 0 && row >= loadedState.crosswordData[row-1].length) || (col > 0 && col >= loadedState.crosswordData[col-1].length)) {
-          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition, completed: status['completed'] ? true : false));
+          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: loadedState.definition, completed: status['completed'] ? true : false));
           return;
         }
         if(loadedState.crosswordData[row][col].type == "X" || loadedState.crosswordData[row][col].isCorrect) {
-          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: status['isCorrect'] ? '' : loadedState.definition, completed: status['completed'] ? true : false));
+          emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: loadedState.definition, completed: status['completed'] ? true : false));
           return;
         }
         bool isHorizontal = loadedState.isHorizontal;
@@ -121,7 +121,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
         final highlightedCellsSecondary = findWordCells(row, col, loadedState.crosswordData, !isHorizontal);
 
         // Emette il nuovo stato con la griglia aggiornata
-        emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: status['isCorrect'] ? -1 : row, selectedCol: status['isCorrect'] ? -1 : col, highlightedCells: status['isCorrect'] ? [] : highlightedCells, definition: status['isCorrect'] ? '' : loadedState.definition, highlightedCellsSecondary: status['isCorrect'] ? [] : highlightedCellsSecondary, completed: status['completed'] ? true : false));
+        emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: status['isCorrect'] ? -1 : row, selectedCol: status['isCorrect'] ? -1 : col, highlightedCells: status['isCorrect'] ? [] : highlightedCells, definition: loadedState.definition, highlightedCellsSecondary: status['isCorrect'] ? [] : highlightedCellsSecondary, completed: status['completed'] ? true : false));
       }
     }
   }
@@ -167,7 +167,9 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
       );
 
       for (var cell in loadedState.highlightedCells) {
-        updatedData[cell[0]][cell[1]].value = "";
+        if(!updatedData[cell[0]][cell[1]].isCorrect){            
+          updatedData[cell[0]][cell[1]].value = "";
+        }
       }
 
       emit(loadedState.copyWith(crosswordData: updatedData));
