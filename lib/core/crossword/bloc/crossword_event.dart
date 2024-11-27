@@ -33,3 +33,9 @@ final class CrosswordError extends CrosswordState {
 
   CrosswordError(this.message);
 }
+
+class ToggleDialogEvent extends CrosswordEvent {
+  final bool isDialogOpen;
+
+  ToggleDialogEvent({required this.isDialogOpen});
+}

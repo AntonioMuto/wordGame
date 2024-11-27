@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/home/bloc/home_bloc.dart';
 import 'package:word_game/core/home/pages/home_page.dart';
 import 'package:word_game/core/navigation/bloc/navigation_bloc.dart';
@@ -15,8 +16,10 @@ import 'core/theme/bloc/theme_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.updateRequestConfiguration(
+    RequestConfiguration(testDeviceIds: ['125EBE817C05F18F9575E85ECBC6C7B3']),
+  );
   unawaited(MobileAds.instance.initialize());
-
   runApp(const MyApp());
 }
 
@@ -25,14 +28,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ThemeBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => ThemeBloc()),
+        BlocProvider(create: (context) => NavigationBloc()),
+      ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {
           return MaterialApp(
-            theme: state.themeData, // Usa il tema dal ThemeBloc
-            // home: BlocProvider(create: (context) => SignInBloc(), child: SignInPage()),
-            home: BlocProvider(create: (context) => NavigationBloc(), child: MainPage()),
+            theme: state.themeData,
+            home: MainPage(), // Usa direttamente la tua pagina principale
           );
         },
       ),

@@ -38,3 +38,15 @@ final class BannerAdFailed extends AdsState {
 
   BannerAdFailed(this.error);
 }
+
+class InterstitialAdLoaded extends AdsState {}
+class InterstitialAdFailed extends AdsState {
+  final String error;
+  InterstitialAdFailed(this.error);
+}
+
+class RewardedAdLoaded extends AdsState {}
+class RewardedAdFailed extends AdsState {
+  final String error;
+  RewardedAdFailed(this.error);
+}
