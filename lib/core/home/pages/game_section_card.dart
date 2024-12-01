@@ -10,6 +10,7 @@ class GameSectionCard extends StatelessWidget {
   const GameSectionCard({required this.section, super.key});
 
   @override
+
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {

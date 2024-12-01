@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -7,11 +8,9 @@ import 'package:word_game/core/crossword/pages/keyboard.dart';
 import 'package:word_game/data_models/CrossWordCell.dart';
 
 class CrosswordPage extends StatelessWidget {
-  CrosswordPage({super.key, required this.level});
   final int level;
 
-  // Variabile locale per gestire lo stato del dialog
-  final ValueNotifier<bool> _isDialogOpen = ValueNotifier(false);
+  const CrosswordPage({Key? key, required this.level}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,206 +19,189 @@ class CrosswordPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => CrosswordBloc([])..add(FetchCrosswordData()), // Bloc del cruciverba
+          create: (_) => CrosswordBloc([])..add(FetchCrosswordData()),
         ),
         BlocProvider(
-          create: (_) => AdsBloc()..add(LoadBannerAdEvent()), // Bloc degli annunci
+          create: (_) => AdsBloc()..add(LoadBannerAdEvent()),
         ),
       ],
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Cruciverba $level'),
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            BlocBuilder<AdsBloc, AdsState>(
-              builder: (context, state) {
-                return BlocBuilder<CrosswordBloc, CrosswordState>(
-                  builder: (context, state) {
-                    if (state is CrosswordLoaded) {
-                      if (state.crosswordData.isEmpty) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final rows = state.crosswordData.length;
-                      final cols = state.crosswordData[0].length;
-
-                      // Altezza dinamica basata sulla larghezza dello schermo e sul numero di righe
-                      final cellSize = screenWidth / cols;
-                      final crosswordHeight = cellSize * rows;
-
-                      // Mostra il modale di completamento se il livello è completato
-                      if (state.completed && !_isDialogOpen.value) {
-                        _isDialogOpen.value = true; // Aggiorna il flag locale
-                        Future.delayed(Duration.zero, () {
-                          _showCompletionDialog(context);
-                        });
-                      }
-
-                      return Container(
-                        height: crosswordHeight,
-                        padding: const EdgeInsets.all(15.0),
-                        child: GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: cols,
-                            crossAxisSpacing: 4.0,
-                            mainAxisSpacing: 4.0,
-                          ),
-                          itemCount: rows * cols,
-                          itemBuilder: (context, index) {
-                            final int row = index ~/ cols;
-                            final int col = index % cols;
-                            final CrosswordCell cell = state.crosswordData[row][col];
-                            final isSelected = state.selectedRow == row && state.selectedCol == col;
-                            final isHighlighted = state.highlightedCells.any(
-                              (highlighted) => highlighted[0] == row && highlighted[1] == col,
-                            );
-                            final hasRef = cell.rif != null;
-
-                            if (cell.type == "X") {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  border: Border.all(color: Colors.black, width: 1),
-                                  borderRadius: BorderRadius.circular(5.0),
-                                ),
-                              );
-                            } else {
-                              return GestureDetector(
-                                onTap: () {
-                                  context.read<CrosswordBloc>().add(SelectCellEvent(row: row, col: col));
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.yellow
-                                        : isHighlighted
-                                            ? const Color.fromARGB(255, 194, 194, 194)
-                                            : Colors.white,
-                                    border: Border.all(color: Colors.black, width: 1),
-                                    borderRadius: BorderRadius.circular(5.0),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      // Se hasRef è true, mostra il numerino in alto a sinistra
-                                      if (hasRef)
-                                        Positioned(
-                                          top: 4, // Distanza dal bordo superiore
-                                          left: 4, // Distanza dal bordo sinistro
-                                          child: Container(
-                                            padding: const EdgeInsets.all(4), // Spazio attorno al numerino
-                                            color: Colors.transparent, // Colore di sfondo per visibilità
-                                            child: Text(
-                                              cell.rif ?? '', // Questo è il numerino che vuoi visualizzare
-                                              style: const TextStyle(
-                                                fontSize: 12, // Dimensione del numerino
-                                                fontWeight: FontWeight.bold, // Grassetto per il numerino
-                                                color: Colors.black, // Colore del numerino
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      // Contenuto principale (testo)
-                                      Center(
-                                        child: Text(
-                                          cell.value?.isEmpty == true ? "" : cell.value!,
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: cell.isCorrect == true ? Colors.green[800] : Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      );
-                    } else if (state is CrosswordInitial) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is CrosswordError) {
-                      return Center(child: Text('Errore: ${state.message}'));
-                    } else {
-                      return Container();
-                    }
+      child: BlocListener<CrosswordBloc, CrosswordState>(
+        listener: (context, state) {
+          if (state is CrosswordLoaded && state.completed) {
+            _showCompletionDialog(context);
+          }
+        },
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if(!didPop){
+              _showExitConfirmationDialog(context);
+            }
+          },
+          child : Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white), // Freccia indietro
+                  onPressed: () {
+                    // Mostra un dialog di conferma
+                    _showExitConfirmationDialog(context);
                   },
-                );
+                ),
+                title: Text(
+                  'Crossword Level $level',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                centerTitle: true,
+                backgroundColor: Colors.blueGrey[900],
+                elevation: 4.0,
+              ),
+              body: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildCrosswordGrid(context, screenWidth),
+                    _buildDefinitionContainer(context),
+                    BlocBuilder<CrosswordBloc, CrosswordState>(
+                      builder: (context, state) {
+                        if (state is CrosswordLoaded) {
+                                return Keyboard();
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      }),
+                    _buildBannerAd(context),
+                  ],
+                ),
+              ),
+            ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCrosswordGrid(BuildContext context, double screenWidth) {
+    return BlocBuilder<CrosswordBloc, CrosswordState>(
+      builder: (context, state) {
+        if (state is CrosswordLoaded) {
+          if (state.crosswordData.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final rows = state.crosswordData.length;
+          final cols = state.crosswordData[0].length;
+          final cellSize = screenWidth / cols;
+          final crosswordHeight = cellSize * rows;
+
+          return Container(
+            height: crosswordHeight,
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(10.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
+                crossAxisSpacing: 4.0,
+                mainAxisSpacing: 4.0,
+              ),
+              itemCount: rows * cols,
+              itemBuilder: (context, index) {
+                final int row = index ~/ cols;
+                final int col = index % cols;
+                final CrosswordCell cell = state.crosswordData[row][col];
+                return _buildCrosswordCell(context, cell, row, col, state);
               },
             ),
+          );
+        }
+        return const Center(child: CircularProgressIndicator(color: Colors.white));
+      },
+    );
+  }
 
-            // Container giallo per la definizione
-            BlocBuilder<CrosswordBloc, CrosswordState>(
-              builder: (context, state) {
-                if (state is CrosswordLoaded && state.definition != null && state.definition != '') {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 1),
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: Colors.yellow,
-                      ),
-                      child: Center(
-                        child: Text(
-                          "${state.definition}",
-                          style: const TextStyle(fontSize: 18),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox(height: 45);
-              },
-            ),
+  Widget _buildCrosswordCell(
+    BuildContext context,
+    CrosswordCell cell,
+    int row,
+    int col,
+    CrosswordState state,
+  ) {
+    if (cell.type == "X") {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(5.0),
+        ),
+      );
+    }
 
-            // Keyboard
-            BlocBuilder<CrosswordBloc, CrosswordState>(
-              builder: (context, state) {
-                if (state is CrosswordLoaded) {
-                  return Keyboard();
-                }
-                return const SizedBox();
-              },
-            ),
+    final isSelected = state is CrosswordLoaded &&
+        state.selectedRow == row &&
+        state.selectedCol == col;
 
-            // Banner Ads
-            BlocBuilder<CrosswordBloc, CrosswordState>(
-              builder: (context, crosswordState) {
-                if (crosswordState is CrosswordLoaded) {
-                  return BlocBuilder<AdsBloc, AdsState>(
-                    builder: (context, adsState) {
-                      if (adsState is AdsLoading) {
-                        return Center(
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 15),
-                            child: const CircularProgressIndicator(),
-                          ),
-                        );
-                      } else if (adsState is BannerAdLoaded) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 15),
-                          height: adsState.bannerAd.size.height.toDouble(),
-                          width: adsState.bannerAd.size.width.toDouble(),
-                          child: AdWidget(ad: adsState.bannerAd),
-                        );
-                      } else if (adsState is BannerAdFailed) {
-                        return Center(child: Text('Errore: ${adsState.error}'));
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
+    final isHighlighted = state is CrosswordLoaded &&
+        state.highlightedCells.any(
+          (highlighted) => highlighted[0] == row && highlighted[1] == col,
+        );
+
+    return GestureDetector(
+      onTap: () {
+        context.read<CrosswordBloc>().add(SelectCellEvent(row: row, col: col));
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.amber
+              : isHighlighted
+                  ? Colors.grey[400]
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(5.0),
+          border: Border.all(
+            color: Colors.black,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            if (cell.rif != null)
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Text(
+                  cell.rif!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+            Center(
+              child: Text(
+                cell.value ?? '',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: cell.isCorrect == true ? Colors.green[700] : Colors.black,
+                ),
+              ),
             ),
           ],
         ),
@@ -227,32 +209,192 @@ class CrosswordPage extends StatelessWidget {
     );
   }
 
-  void _showCompletionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Congratulazioni!'),
-          content: const Text('Hai completato il livello. Vuoi guardare una pubblicità?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _isDialogOpen.value = false; // Chiudi il dialog e aggiorna il flag
-              },
-              child: const Text('Chiudi'),
+  Widget _buildDefinitionContainer(BuildContext context) {
+    return BlocBuilder<CrosswordBloc, CrosswordState>(
+      builder: (context, state) {
+        if (state is CrosswordLoaded &&
+            state.definition != null &&
+            state.definition!.isNotEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.yellow.shade700,
+                borderRadius: BorderRadius.circular(12.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                state.definition!,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                textAlign: TextAlign.center,
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                context.read<AdsBloc>().add(LoadRewardedAdEvent());
-                Navigator.of(dialogContext).pop();
-                _isDialogOpen.value = false; // Chiudi il dialog e aggiorna il flag
-              },
-              child: const Text('Guarda Pubblicità'),
-            ),
-          ],
-        );
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }
+
+  Widget _buildBannerAd(BuildContext context) {
+    return BlocBuilder<AdsBloc, AdsState>(
+      builder: (context, adsState) {
+        if (adsState is BannerAdLoaded) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            height: adsState.bannerAd.size.height.toDouble(),
+            width: adsState.bannerAd.size.width.toDouble(),
+            child: AdWidget(ad: adsState.bannerAd),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  void _showCompletionDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.blueGrey[800], // Sfondo scuro
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0), // Bordi arrotondati
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green,), // Icona di completamento
+            SizedBox(width: 9.0),
+            Text('Complimenti!',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Hai completato il livello. Vuoi raddoppiare le ricompense?',
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center, // Pulsanti centrati
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green, // Colore verde per "Watch Ad"
+              foregroundColor: Colors.white, // Testo bianco
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            onPressed: () {
+              final adBloc = context.read<AdsBloc>();
+              adBloc.add(LoadRewardedAdEvent());
+
+              late StreamSubscription<AdsState> subscription;
+
+              subscription = adBloc.stream.listen((adState) {
+                if (adState is RewardedAdLoaded) {
+                  adBloc.add(ShowRewardedAdEvent());
+                } else if (adState is RewardedAdClosed) {
+                  Navigator.of(dialogContext).pop();
+                  Navigator.of(context).pop();
+                  subscription.cancel();
+                } else if (adState is RewardedAdFailed) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to load ad: ${adState.error}')),
+                  );
+                  Navigator.of(dialogContext).pop();
+                  Navigator.of(context).pop();
+                  subscription.cancel();
+                }
+              });
+            },
+            child: const Text('Raddoppia'),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).pop();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white, // Testo bianco
+            ),
+            child: const Text('Chiudi'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+  void _showExitConfirmationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.blueGrey[800], // Sfondo scuro
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0), // Bordi arrotondati
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red), // Icona di avvertimento
+            SizedBox(width: 8.0),
+            Text(
+              'Conferma Uscita',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Sei sicuro di voler uscire dal livello corrente?',
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center, // Pulsanti centrati
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent, // Colore rosso per "No"
+              foregroundColor: Colors.white, // Testo bianco
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(); // Chiudi il dialog
+            },
+            child: const Text('No'),
+          ),
+          const SizedBox(width: 10),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green, // Colore verde per "Sì"
+              foregroundColor: Colors.white, // Testo bianco
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(); // Chiudi il dialog
+              Navigator.of(context).pop(); // Torna indietro
+            },
+            child: const Text('Sì'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 }

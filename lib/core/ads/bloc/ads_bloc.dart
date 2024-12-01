@@ -69,10 +69,13 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
 
           // Configurazione dei listener per l'Interstitial
           ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdWillDismissFullScreenContent: (ad) {
+              ad.dispose();
+              _interstitialAd = null;
+            },
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
               _interstitialAd = null;
-              
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
@@ -108,7 +111,6 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   }
 
   Future<void> _onLoadRewardedAd(LoadRewardedAdEvent event, Emitter<AdsState> emit) async {
-    emit(AdsLoading());
 
     final completer = Completer<void>();
 
@@ -119,17 +121,19 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
         onAdLoaded: (ad) {
           _rewardedAd = ad;
           emit(RewardedAdLoaded());
-          completer.complete();
 
           // Configura il callback per il rewarded ad
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
               _rewardedAd = null;
+              emit(RewardedAdClosed());
+              completer.complete();
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
               _rewardedAd = null;
+              completer.complete();
             },
             onAdShowedFullScreenContent: (ad) {
               // Qui puoi dare una ricompensa all'utente

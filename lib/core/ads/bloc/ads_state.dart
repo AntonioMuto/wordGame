@@ -50,3 +50,5 @@ class RewardedAdFailed extends AdsState {
   final String error;
   RewardedAdFailed(this.error);
 }
+
+class RewardedAdClosed extends AdsState {}

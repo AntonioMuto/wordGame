@@ -90,7 +90,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
       );
 
       // Aggiorna solo la cella selezionata
-      if (loadedState.selectedRow! >= 0 && loadedState.selectedCol! >= 0) {
+      if (loadedState.selectedRow != null && loadedState.selectedCol != null && loadedState.selectedRow! >= 0 && loadedState.selectedCol! >= 0) {
         int? row = loadedState.selectedRow!;
         int? col = loadedState.selectedCol!;
         updatedData[row][col].value = event.letter.toUpperCase();

@@ -40,7 +40,7 @@ class SignInPage extends StatelessWidget {
 
                 // Mostra il pulsante o il caricamento
                 if (state is SignInLoading)
-                  CircularProgressIndicator()
+                  CircularProgressIndicator( color: Colors.white,)
                 else
                   ElevatedButton(
                     onPressed: () {
@@ -50,7 +50,7 @@ class SignInPage extends StatelessWidget {
                           .read<SignInBloc>()
                           .add(SignInSubmitted(username, password));
                     },
-                    child: Text("Login"),
+                    child: Text("Login", style: TextStyle(color: Colors.white)),
                   ),
               ],
             );

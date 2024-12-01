@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/home/bloc/home_bloc.dart';
 import 'package:word_game/core/home/pages/home_page.dart';
 import 'package:word_game/core/navigation/bloc/navigation_bloc.dart';
@@ -9,15 +11,27 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => NavigationBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => NavigationBloc()),
+        BlocProvider(
+          create: (_) => AdsBloc()..add(LoadBannerAdEvent()),
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           title: const Text("SolveWords"),
           elevation: 0,
-          backgroundColor: Colors.transparent,
         ),
-        body: BlocBuilder<NavigationBloc, NavigationState>(builder: (context, state) {
+        body: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: BlocBuilder<NavigationBloc, NavigationState>(builder: (context, state) {
           int selectedIndex = 0;
           if (state is NavigationChangedState) {
             selectedIndex = state.selectedIndex;
@@ -27,7 +41,11 @@ class MainPage extends StatelessWidget {
             // BlocProvider per il HomeBloc, con evento LoadGameSectionsEvent emesso
             BlocProvider(
               create: (context) => HomeBloc()..add(LoadGameSectionsEvent()), 
-              child: HomePage(),
+              child: Column(
+                children: [
+                  Expanded(child: HomePage()),
+                ],
+              ),
             ),
             // Altre pagine
             Container(child: Text("CIAO2")),
@@ -37,30 +55,27 @@ class MainPage extends StatelessWidget {
 
           return _pages[selectedIndex]; // Restituisce la pagina selezionata
         }),
+        ),
         bottomNavigationBar: BlocBuilder<NavigationBloc, NavigationState>(
           builder: (context, state) {
             int selectedIndex = 0;
             if (state is NavigationChangedState) {
               selectedIndex = state.selectedIndex;
             }
-            return Container(                                             
-            decoration: const BoxDecoration(                                                   
-              borderRadius: BorderRadius.only(                                           
-                topRight: Radius.circular(30), topLeft: Radius.circular(30)),            
-              boxShadow: [                                                               
-                BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 10),       
-              ],                                                                         
-            ),     
-             child: ClipRRect(                                                            
-              borderRadius: BorderRadius.only(                                           
-              topLeft: Radius.circular(30.0),                                            
-              topRight: Radius.circular(30.0),                                           
-              ),                                                                         
+            return Container(             
+
+              decoration: const BoxDecoration(                                                   
+                borderRadius: BorderRadius.only(                                           
+                  topRight: Radius.circular(30), topLeft: Radius.circular(30)),            
+                boxShadow: [                                                               
+                  BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 10),       
+                ],                                                                         
+              ),     
               child: BottomNavigationBar(
                   currentIndex: selectedIndex,
                   elevation: 1,
                   type: BottomNavigationBarType.fixed,
-                  backgroundColor: Colors.grey[700],
+                  backgroundColor: const Color.fromARGB(255, 47, 47, 47),
                   selectedItemColor: Colors.amber[800],
                   selectedLabelStyle: const TextStyle(fontSize: 14),
                   selectedIconTheme: IconThemeData(size: 28),
@@ -90,7 +105,6 @@ class MainPage extends StatelessWidget {
                     ),
                   ],
                   )
-              ),
             );
           },
         ),
