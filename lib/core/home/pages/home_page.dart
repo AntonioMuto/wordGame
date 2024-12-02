@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/home/bloc/home_bloc.dart';
@@ -23,8 +24,16 @@ class HomePage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   itemCount: state.sections.length,
                   itemBuilder: (context, index) {
-                    return GameSectionCard(section: state.sections[index]);
-                  },
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    child: SlideAnimation(
+                      verticalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child: GameSectionCard(section: state.sections[index])
+                      ),
+                    ));
+                  }
                 ),
               ),
               _buildBannerAd(context)

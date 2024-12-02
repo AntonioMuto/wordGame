@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
@@ -125,9 +126,17 @@ class CrosswordPage extends StatelessWidget {
                 final int row = index ~/ cols;
                 final int col = index % cols;
                 final CrosswordCell cell = state.crosswordData[row][col];
-                return _buildCrosswordCell(context, cell, row, col, state);
-              },
-            ),
+                return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 200),
+                    child: SlideAnimation(
+                      verticalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child:  _buildCrosswordCell(context, cell, row, col, state)
+                      ),
+                    ));
+                  }
+                )
           );
         }
         return const Center(child: CircularProgressIndicator(color: Colors.white));
