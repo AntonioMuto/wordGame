@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:word_game/core/ads/bloc/ads_bloc.dart';
+import 'package:word_game/core/anagram/bloc/anagram_bloc.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
 import 'package:word_game/core/crossword/pages/keyboard.dart';
 import 'package:word_game/data_models/CrossWordCell.dart';
@@ -72,7 +73,17 @@ class CrosswordPage extends StatelessWidget {
                     BlocBuilder<CrosswordBloc, CrosswordState>(
                       builder: (context, state) {
                         if (state is CrosswordLoaded) {
-                                return Keyboard();
+                                return Keyboard(
+                                  onKeyTap: (letter) {
+                                    if (letter == 'delete') {
+                                      context.read<CrosswordBloc>().add(RemoveLetterEvent());
+                                    } else if (letter == 'clean') {
+                                      context.read<CrosswordBloc>().add(ResetWordEvent());
+                                    } else {
+                                      context.read<CrosswordBloc>().add(InsertLetterEvent(letter: letter));
+                                    }
+                                  },
+                                );
                         } else {
                           return const SizedBox.shrink();
                         }

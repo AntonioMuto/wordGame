@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:word_game/core/anagram/pages/anagram_page.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
 import 'package:word_game/core/crossword/pages/crossword_page.dart';
 import 'package:word_game/data_models/GameSection.dart';
@@ -42,7 +43,7 @@ class LevelsPage extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => BlocProvider(
                           create: (context) => CrosswordBloc([]),
-                          child: CrosswordPage(level: index + 1),
+                          child: _loadGamePage(section, index),
                         ),
                       ),
                     );
@@ -117,5 +118,16 @@ class LevelsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  _loadGamePage(GameSection section, int index) {
+    switch (section.name) {
+      case "Cruciverba":
+        return CrosswordPage(level: index + 1);
+      case "Anagramma":
+        return AnagramPage(level: index + 1);
+      default:
+        
+    }
   }
 }
