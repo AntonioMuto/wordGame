@@ -2,8 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:word_game/core/ads/bloc/ads_bloc.dart';
+import 'package:word_game/core/crossword/pages/keyboard.dart';
 import 'package:word_game/core/findword/bloc/findword_bloc.dart';
+import 'package:word_game/data_models/FindWordCell.dart';
 
 class FindWordPage extends StatelessWidget {
   final int level;
@@ -11,6 +15,8 @@ class FindWordPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -42,10 +48,150 @@ class FindWordPage extends StatelessWidget {
           centerTitle: true,
           backgroundColor: Colors.blueGrey[900],
         ),
-        body: const Placeholder()
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(height: 20),
+              _buildFindWordGrid(context, screenWidth),
+              const Spacer(),
+              _buildBannerAd(context),
+              BlocBuilder<FindwordBloc, FindwordState>(
+                      builder: (context, state) {
+                        if (state is FindwordLoaded) {
+                                return Keyboard(
+                                  onKeyTap: (letter) {
+                                    if (letter == 'delete') {
+                                      context.read<FindwordBloc>().add(RemoveLetterEvent());
+                                    } else if (letter == 'clean') {
+                                      context.read<FindwordBloc>().add(ResetWordEvent());
+                                    } else {
+                                      context.read<FindwordBloc>().add(InsertLetterEvent(letter));
+                                    }
+                                  },
+                                );
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      }),
+            ],
+          ),
       ),
         ),
       ),
+    ));
+  }
+
+  Widget _buildFindWordGrid(BuildContext context, double screenWidth) {
+    return BlocBuilder<FindwordBloc, FindwordState>(
+        builder: (context, state) {
+          if (state is FindwordLoaded) {
+            final cols = state.solution.length;
+            final rows = 5;
+            final cellSize = screenWidth / (cols + 1);
+            final crosswordHeight = cellSize * (rows + 1);
+
+            return Container(
+              height: crosswordHeight,
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: const Offset(2, 0),
+                  ),
+                ],
+              ),
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: cols,
+                  crossAxisSpacing: 5.0,
+                  mainAxisSpacing: 5.0,
+                ),
+                itemCount: rows * cols,
+                itemBuilder: (context, index) {
+                  final int row = index ~/ cols;
+                  final int col = index % cols;
+                  final Findwordcell cell = state.currentWord[row][col];
+                  final bool isSelected = (state.selectedRow != -1 && state.selectedCol != -1 && state.selectedRow == row && state.selectedCol == col);
+                  return AnimationConfiguration.staggeredList(
+                      position: index,
+                      duration: const Duration(milliseconds: 200),
+                      child: SlideAnimation(
+                        verticalOffset: 50.0,
+                        child: FadeInAnimation(
+                          child:  _buildFindwordCell(context, cell, row, col, state, isSelected)
+                        ),
+                      ));
+                    }
+                  )
+            );
+          }
+          return const Center(child: CircularProgressIndicator(color: Colors.white));
+        },
+      );
+  }
+
+  Widget _buildFindwordCell(BuildContext context, Findwordcell cell, int row, int col, FindwordState state, bool isSelected) {
+    return AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: _setColorByType(cell.type, isSelected),
+          borderRadius: BorderRadius.circular(5.0),
+          border: Border.all(
+            color: const Color.fromARGB(255, 88, 88, 88),
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+                cell.letter ?? '',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+        ) );
+  }
+
+  _setColorByType(String type, bool isSelected) {
+    switch (type) {
+      case 'X':
+        return isSelected ? Colors.grey[500]: Colors.grey[700];
+      case 'O':
+        return Colors.green[650];
+      case 'P':
+        return Colors.amber[400];
+      default:
+        return isSelected ? Colors.grey[500]: Colors.grey[700];
+    }
+  }
+
+  Widget _buildBannerAd(BuildContext context) {
+    return BlocBuilder<AdsBloc, AdsState>(
+      builder: (context, adsState) {
+        if (adsState is BannerAdLoaded) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            height: adsState.bannerAd.size.height.toDouble(),
+            width: adsState.bannerAd.size.width.toDouble(),
+            child: AdWidget(ad: adsState.bannerAd),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
