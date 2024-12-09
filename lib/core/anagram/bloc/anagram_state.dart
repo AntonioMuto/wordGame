@@ -9,26 +9,30 @@ class AnagramLoaded extends AnagramState {
   final List<String> anagram;
   final List<String> solution;
   final List<String> currentWord;
-  final List<String> usedLetters;
+  final Map<int, String> usedLetters;
+  final bool completed;
 
   AnagramLoaded({
     required this.anagram,
     required this.solution,
     required this.currentWord,
     required this.usedLetters,
+    this.completed = false,
   });
 
   AnagramLoaded copyWith({
     List<String>? anagram,
     List<String>? solution,
     List<String>? currentWord,
-    List<String>? usedLetters,
+    Map<int, String>? usedLetters,
+    bool? completed
   }) {
     return AnagramLoaded(
       anagram: anagram ?? this.anagram,
       solution: solution ?? this.solution,
       currentWord: currentWord ?? this.currentWord,
       usedLetters: usedLetters ?? this.usedLetters,
+      completed: completed ?? this.completed
     );
   }
 }

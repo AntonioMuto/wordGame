@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:word_game/core/anagram/pages/anagram_page.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
 import 'package:word_game/core/crossword/pages/crossword_page.dart';
+import 'package:word_game/core/findword/pages/findword_pages.dart';
 import 'package:word_game/data_models/GameSection.dart';
 
 class LevelsPage extends StatelessWidget {
@@ -126,6 +127,8 @@ class LevelsPage extends StatelessWidget {
         return CrosswordPage(level: index + 1);
       case "Anagramma":
         return AnagramPage(level: index + 1);
+      case "Trova la Parola":
+        return FindWordPage(level: index + 1);
       default:
         
     }

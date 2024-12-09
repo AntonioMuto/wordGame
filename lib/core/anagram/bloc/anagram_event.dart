@@ -7,8 +7,9 @@ class FetchAnagramData extends AnagramEvent {}
 
 class AddLetterEvent extends AnagramEvent {
   final String letter;
+  final int position;
 
-  AddLetterEvent(this.letter);
+  AddLetterEvent(this.letter, this.position);
 }
 
 class AddLetterAtPositionEvent extends AnagramEvent {
@@ -21,3 +22,11 @@ class AddLetterAtPositionEvent extends AnagramEvent {
 class RemoveLastLetterEvent extends AnagramEvent {}
 
 class ResetWordAnagramEvent extends AnagramEvent {}
+
+
+class RemoveElementEventByPosition extends AnagramEvent {
+  final int position;
+  final String letter;
+ 
+  RemoveElementEventByPosition(this.position, this.letter);
+}

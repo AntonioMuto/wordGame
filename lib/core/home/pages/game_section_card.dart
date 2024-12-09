@@ -14,7 +14,6 @@ class GameSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if(section.name == "Cruciverba") {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -24,18 +23,6 @@ class GameSectionCard extends StatelessWidget {
               ),
             ),
           );
-        }
-        if(section.name == "Anagramma") {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => LevelsBloc(),
-                child: LevelsPage(section: section),
-              ),
-            ),
-          );
-        }
       },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: section.color.withOpacity(1), width: 2)),
