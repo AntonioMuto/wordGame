@@ -16,3 +16,15 @@ class InsertLetterEvent extends FindwordEvent {
 class ResetWordEvent extends FindwordEvent {}
 
 class SelectCellEvent extends FindwordEvent {}
+
+class SubmitWordEvent extends FindwordEvent {}
+
+class ChangeSelectedCellEvent extends FindwordEvent {
+  final int row;
+  final int col;
+
+  ChangeSelectedCellEvent(this.row, this.col);
+}
+
+class ContinueLevelEvent extends FindwordEvent {}
+class RemoveCompletedEvent extends FindwordEvent {}

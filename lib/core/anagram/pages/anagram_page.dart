@@ -88,10 +88,10 @@ class AnagramPage extends StatelessWidget {
               color: Colors.white.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12.0),
               boxShadow: [
-                BoxShadow(
+                const BoxShadow(
                   color: Colors.black26,
                   blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -161,10 +161,10 @@ class AnagramPage extends StatelessWidget {
               color: Colors.white.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12.0),
               boxShadow: [
-                BoxShadow(
+                const BoxShadow(
                   color: Colors.black26,
                   blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -238,13 +238,25 @@ class AnagramPage extends StatelessWidget {
                   onPressed: () {
                     context.read<AnagramBloc>().add(RemoveLastLetterEvent());
                   },
-                  child: const Icon(Icons.reply_sharp, color: Colors.amber, size: 24)
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('CANCELLA  ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+                      Icon(Icons.reply_sharp, color: Colors.amber, size: 24),
+                    ],
+                  )
                 ),
                 ElevatedButton(
                   onPressed: () {
                     context.read<AnagramBloc>().add(ResetWordAnagramEvent());
                   },
-                  child: const Icon(Icons.cleaning_services, color: Colors.amber, size: 24),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('RICOMINCIA  ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+                      Icon(Icons.cleaning_services, color: Colors.amber, size: 24),
+                    ],
+                  ),
                 ),
               ],
             );

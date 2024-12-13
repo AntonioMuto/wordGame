@@ -65,21 +65,29 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
           emit(InterstitialAdLoaded());
-          completer.complete();
 
           // Configurazione dei listener per l'Interstitial
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdWillDismissFullScreenContent: (ad) {
               ad.dispose();
               _interstitialAd = null;
+              print("emit InterstitialAdClosed()");
+              emit(InterstitialAdClosed());
+              completer.complete();
             },
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
               _interstitialAd = null;
+              print("emit InterstitialAdClosed()");
+              emit(InterstitialAdClosed());
+              completer.complete();
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
               _interstitialAd = null;
+              print("emit InterstitialAdClosed()");
+              emit(InterstitialAdClosed());
+              completer.completeError(error);
             },
           );
         },

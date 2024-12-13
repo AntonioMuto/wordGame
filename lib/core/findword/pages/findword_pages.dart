@@ -31,6 +31,9 @@ class FindWordPage extends StatelessWidget {
           if (state is FindwordLoaded && state.completed) {
             _showCompletionDialog(context);
           }
+          if (state is FindwordLoaded && !state.completed && state.currentRow == state.maxRow) {
+            _showFailedDialog(context);
+          }
         },
         child: PopScope(
           canPop: false,
@@ -81,6 +84,7 @@ class FindWordPage extends StatelessWidget {
                           return const SizedBox.shrink();
                         }
                       }),
+              _buildButtons(context),
             ],
           ),
       ),
@@ -94,7 +98,7 @@ class FindWordPage extends StatelessWidget {
         builder: (context, state) {
           if (state is FindwordLoaded) {
             final cols = state.solution.length;
-            final rows = 5;
+            final rows = state.maxRow;
             final cellSize = screenWidth / (cols + 1);
             final crosswordHeight = cellSize * (rows + 1);
 
@@ -143,36 +147,43 @@ class FindWordPage extends StatelessWidget {
       );
   }
 
-  Widget _buildFindwordCell(BuildContext context, Findwordcell cell, int row, int col, FindwordState state, bool isSelected) {
-    return AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: _setColorByType(cell.type, isSelected),
-          borderRadius: BorderRadius.circular(5.0),
-          border: Border.all(
-            color: const Color.fromARGB(255, 88, 88, 88),
-            width: 1,
+  Widget _buildFindwordCell(BuildContext context, Findwordcell cell, int row, int col, FindwordLoaded state, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        if(state.currentRow == row){
+          context.read<FindwordBloc>().add(ChangeSelectedCellEvent(row, col));
+        }
+      },
+      child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: _setColorByType(cell, isSelected),
+            borderRadius: BorderRadius.circular(5.0),
+            border: Border.all(
+              color: const Color.fromARGB(255, 88, 88, 88),
+              width: 1,
+            ),
           ),
-        ),
-        child: Center(
-          child: Text(
-                cell.letter ?? '',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: Center(
+            child: Text(
+                  cell.letter ?? '',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-        ) );
+          ) ),
+    );
   }
 
-  _setColorByType(String type, bool isSelected) {
-    switch (type) {
+  _setColorByType(Findwordcell cell, bool isSelected) {
+    switch (cell.type) {
       case 'X':
         return isSelected ? Colors.grey[500]: Colors.grey[700];
       case 'O':
-        return Colors.green[650];
-      case 'P':
+        return Colors.green[600];
+      case '%':
         return Colors.amber[400];
       default:
         return isSelected ? Colors.grey[500]: Colors.grey[700];
@@ -270,6 +281,81 @@ class FindWordPage extends StatelessWidget {
     );
   }
 
+  void _showFailedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.blueGrey[800], // Sfondo scuro
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0), // Bordi arrotondati
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green,), // Icona di completamento
+              SizedBox(width: 9.0),
+              Text('Peccato !!',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: const Text(
+            'Non sei riuscito a completare il livello, vuoi continuare la partita?',
+            style: TextStyle(color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center, // Pulsanti centrati
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green, // Colore verde per "Watch Ad"
+                foregroundColor: Colors.white, // Testo bianco
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onPressed: () {
+                final adBloc = context.read<AdsBloc>();
+                adBloc.add(LoadRewardedAdEvent());
+
+                late StreamSubscription<AdsState> subscription;
+
+                subscription = adBloc.stream.listen((adState) {
+                  if (adState is RewardedAdLoaded) {
+                    adBloc.add(ShowRewardedAdEvent());
+                  } else if (adState is RewardedAdClosed) {
+                    Navigator.of(dialogContext).pop(); 
+                    //context.read<FindwordBloc>().add(ContinueLevelEvent());
+                    subscription.cancel();
+                  } else if (adState is RewardedAdFailed) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to load ad: ${adState.error}')),
+                    );
+                    Navigator.of(dialogContext).pop();
+                    Navigator.of(context).pop();
+                    subscription.cancel();
+                  }
+                });
+              },
+              child: const Text('Continua'),
+            ),
+            const SizedBox(width: 10),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white, // Testo bianco
+              ),
+              child: const Text('Chiudi'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showExitConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -326,6 +412,55 @@ class FindWordPage extends StatelessWidget {
             ),
           ],
         );
+      },
+    );
+  }
+
+  Widget _buildButtons(BuildContext context) {
+    return BlocBuilder<FindwordBloc, FindwordState>(
+      builder: (context, state) {
+        if (state is FindwordInitial) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is FindwordLoaded) {
+          if(!state.completed){
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // ElevatedButton(
+                //   onPressed: () {
+                //     // context.read<FindwordBloc>().add(RemoveLastLetterEvent());
+                //   },
+                //   child: const Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text('CANCELLA  ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+                //       Icon(Icons.reply_sharp, color: Colors.amber, size: 24),
+                //     ],
+                //   )
+                // ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<FindwordBloc>().add(SubmitWordEvent());
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('INVIA  ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+                        Icon(Icons.send, color: Colors.amber, size: 24),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return const SizedBox.shrink();
+          }
+        } else {
+          return const SizedBox.shrink();
+        }
       },
     );
   }

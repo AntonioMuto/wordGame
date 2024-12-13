@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -14,6 +15,10 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
     on<InsertLetterEvent>(_onInsertLetter);
     on<RemoveLetterEvent>(_onRemoveLetter);
     on<ResetWordEvent>(_onResetWord);
+    on<SubmitWordEvent>(_onSubmitWord);
+    on<ChangeSelectedCellEvent>(_onSelectCell);
+    on<ContinueLevelEvent>(_onContinueLevel);
+    on<RemoveCompletedEvent>(_onRemoveCompleted);
   }
 
   Future<void> _onFetchFindWordData(FetchFindWordData event, Emitter<FindwordState> emit) async {
@@ -27,7 +32,7 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
         final List<String> correctWords = (jsonData['solution'] as List<dynamic>).map((e) => e as String).toList();
 
         final List<List<Findwordcell>> initialCurrentWord = List.generate(
-            5, 
+            7, 
             (index) => List.generate(correctWords.length, (_) => Findwordcell(type: "X", letter: ""))
           );
         emit(FindwordLoaded(
@@ -58,10 +63,11 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       var newSelectedRow = currentState.selectedRow;
       var newCurrentRow = currentState.currentRow;
 
+      print(currentState.currentRow);
       if(newSelectedCol != null && currentState.currentWord[currentState.currentRow].length - 1 > currentState.selectedCol!) {
         newSelectedCol = currentState.selectedCol! + 1;
       }
-      if(newSelectedCol != null && newSelectedCol >= currentState.currentWord[currentState.currentRow].length - 1) {
+      if(newSelectedCol != null && newSelectedCol > currentState.currentWord[currentState.currentRow].length - 1) {
         newSelectedCol = -1;
         newSelectedRow = -1;
       }
@@ -74,7 +80,7 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
     if (state is FindwordLoaded) {
       final currentState = state as FindwordLoaded;
       var newCurrentWord = List<List<Findwordcell>>.from(currentState.currentWord!);
-
+    
       newCurrentWord[currentState.selectedRow!][currentState.selectedCol!].letter = '';
       
       var newSelectedCol = currentState.selectedCol;
@@ -86,7 +92,7 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       }
       if(newSelectedCol != null && newSelectedCol <= 0) {
         newSelectedCol = 0;
-        newSelectedRow = 0;
+        newSelectedRow = currentState.currentRow;
       }
 
       emit(currentState.copyWith(currentWord: newCurrentWord, selectedCol: newSelectedCol, selectedRow: newSelectedRow, currentRow: newCurrentRow));
@@ -106,9 +112,85 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       }
       
       newSelectedCol = 0;
-      newSelectedRow = 0;
+      newSelectedRow = currentState.currentRow;
 
       emit(currentState.copyWith(currentWord: newCurrentWord, selectedCol: newSelectedCol, selectedRow: newSelectedRow));
+    }
+  }
+
+  Future<void> _onSubmitWord(SubmitWordEvent event, Emitter<FindwordState> emit) async {
+    if (state is FindwordLoaded) {
+      final currentState = state as FindwordLoaded;
+      var newCurrentWord = List<List<Findwordcell>>.from(currentState.currentWord!);
+      for(var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
+        if(newCurrentWord[currentState.currentRow][i].letter == '') {
+          return;
+        }
+      }
+      for(var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
+        var letter = newCurrentWord[currentState.currentRow][i].letter;
+        if(letter == currentState.solution[i]) {
+          newCurrentWord[currentState.currentRow][i].type = "O";
+        } else {
+          _checkIfLetterExixtsButWrongPosition(letter, i, currentState.solution, newCurrentWord[currentState.currentRow]);
+        }
+      }
+      _validateWord(newCurrentWord[currentState.currentRow], currentState.solution, emit);
+
+      var newSelectedCol = 0;
+      var newSelectedRow = currentState.currentRow + 1;
+
+      if(newCurrentWord[currentState.currentRow].every((cell) => cell.type == "O")) {
+        emit(currentState.copyWith(currentWord: newCurrentWord, completed: true));
+      }
+
+      emit(currentState.copyWith(currentWord: newCurrentWord, selectedCol: newSelectedCol, selectedRow: newSelectedRow, currentRow: currentState.currentRow + 1));
+    }
+  }
+
+  Future<void> _onSelectCell(ChangeSelectedCellEvent event, Emitter<FindwordState> emit) async {
+    if (state is FindwordLoaded) {
+      final currentState = state as FindwordLoaded;
+      emit(currentState.copyWith(selectedCol: event.col, selectedRow: event.row));
+    }
+  }
+
+  _checkIfLetterExixtsButWrongPosition(String? letter, int index, List<String> solution, List<Findwordcell> currentWord) {
+    if(!solution.contains(letter)) {
+      currentWord[index].type = "X";
+    } else {
+      currentWord[index].type = "%";
+    }
+  }
+
+  _validateWord(List<Findwordcell> currentWord, List<String> solution, Emitter<FindwordState> emit) {
+    for (var cell in currentWord) {
+      if(cell.type == "%") {
+        int countLetter = solution.where((lettera) => lettera == cell.letter).length;
+        int numberSolution = 0;
+        for (var i = 0; i < currentWord.length; i++) {
+          if(currentWord[i].letter == cell.letter) {
+            numberSolution++;
+            if(numberSolution > countLetter){
+              cell.type = "X";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> _onContinueLevel(ContinueLevelEvent event, Emitter<FindwordState> emit) async {
+    if (state is FindwordLoaded) {
+      final currentState = state as FindwordLoaded;
+      emit(currentState.copyWith(currentRow: currentState.currentRow + 1, completed: false, maxRow: currentState.maxRow + 1));  
+    }
+  }
+
+  Future<void> _onRemoveCompleted(RemoveCompletedEvent event, Emitter<FindwordState> emit) async {
+    if (state is FindwordLoaded) {
+      final currentState = state as FindwordLoaded;
+      emit(currentState.copyWith(completed: false));  
     }
   }
 }

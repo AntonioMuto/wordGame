@@ -45,6 +45,8 @@ class InterstitialAdFailed extends AdsState {
   InterstitialAdFailed(this.error);
 }
 
+class InterstitialAdClosed extends AdsState {}
+
 class RewardedAdLoaded extends AdsState {}
 class RewardedAdFailed extends AdsState {
   final String error;
