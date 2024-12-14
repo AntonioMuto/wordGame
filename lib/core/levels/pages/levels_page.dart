@@ -81,7 +81,7 @@ class LevelsPage extends StatelessWidget {
                         child: Opacity(
                           opacity: isLevelUnlocked ? 0.05 : 0, // Maggiore trasparenza se bloccato
                           child: Image.asset(
-                            'assets/images/crossword.png',
+                            'assets/images/${section.gameImage}.png',
                             fit: BoxFit.cover,
                           ),
                         ),

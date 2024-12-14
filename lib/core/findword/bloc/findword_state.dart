@@ -13,8 +13,9 @@ class FindwordLoaded extends FindwordState {
   int? selectedRow;
   int? selectedCol;
   int maxRow;
+  bool failed;
 
-  FindwordLoaded({required this.solution, required this.currentWord, this.completed = false, this.currentRow = 0, this.selectedRow, this.selectedCol, this.maxRow = 5});
+  FindwordLoaded({required this.solution, required this.currentWord, this.completed = false, this.currentRow = 0, this.selectedRow, this.selectedCol, this.maxRow = 5, this.failed = false});
  
   FindwordLoaded copyWith({
       List<String>? solution,
@@ -23,7 +24,8 @@ class FindwordLoaded extends FindwordState {
       int? currentRow,
       int? selectedRow,
       int? selectedCol,
-      int? maxRow
+      int? maxRow,
+      bool? failed
     }) {
       return FindwordLoaded(
         solution: solution ?? this.solution,
@@ -32,7 +34,8 @@ class FindwordLoaded extends FindwordState {
         currentRow: currentRow  ?? this.currentRow,
         selectedRow: selectedRow ?? this.selectedRow,
         selectedCol: selectedCol ?? this.selectedCol,
-        maxRow: maxRow ?? this.maxRow
+        maxRow: maxRow ?? this.maxRow,
+        failed: failed ?? this.failed
       );
     }
 }

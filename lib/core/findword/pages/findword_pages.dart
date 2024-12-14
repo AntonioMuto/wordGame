@@ -31,8 +31,8 @@ class FindWordPage extends StatelessWidget {
           if (state is FindwordLoaded && state.completed) {
             _showCompletionDialog(context);
           }
-          if (state is FindwordLoaded && !state.completed && state.currentRow == state.maxRow) {
-            _showFailedDialog(context);
+          if (state is FindwordLoaded && !state.completed && state.failed) {
+            state.maxRow < 6 ? _showFailedDialog(context, false) : _showFailedDialog(context, true);
           }
         },
         child: PopScope(
@@ -281,7 +281,7 @@ class FindWordPage extends StatelessWidget {
     );
   }
 
-  void _showFailedDialog(BuildContext context) {
+  void _showFailedDialog(BuildContext context, bool endGame) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -299,14 +299,15 @@ class FindWordPage extends StatelessWidget {
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ],
           ),
-          content: const Text(
-            'Non sei riuscito a completare il livello, vuoi continuare la partita?',
-            style: TextStyle(color: Colors.white),
+          content: Text(
+            !endGame ? 'Non sei riuscito a completare il livello, vuoi continuare la partita?' : 
+            'Non sei riuscito a completare il livello, ritenta !',
+            style: const TextStyle(color: Colors.white),
             textAlign: TextAlign.center,
           ),
           actionsAlignment: MainAxisAlignment.center, // Pulsanti centrati
           actions: [
-            ElevatedButton(
+            !endGame ? ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green, // Colore verde per "Watch Ad"
                 foregroundColor: Colors.white, // Testo bianco
@@ -315,31 +316,34 @@ class FindWordPage extends StatelessWidget {
                 ),
               ),
               onPressed: () {
-                final adBloc = context.read<AdsBloc>();
-                adBloc.add(LoadRewardedAdEvent());
+                if(!endGame) {
+                  final adBloc = context.read<AdsBloc>();
+                  adBloc.add(LoadRewardedAdEvent());
 
-                late StreamSubscription<AdsState> subscription;
+                  late StreamSubscription<AdsState> subscription;
 
-                subscription = adBloc.stream.listen((adState) {
-                  if (adState is RewardedAdLoaded) {
-                    adBloc.add(ShowRewardedAdEvent());
-                  } else if (adState is RewardedAdClosed) {
-                    Navigator.of(dialogContext).pop(); 
-                    //context.read<FindwordBloc>().add(ContinueLevelEvent());
-                    subscription.cancel();
-                  } else if (adState is RewardedAdFailed) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to load ad: ${adState.error}')),
-                    );
-                    Navigator.of(dialogContext).pop();
-                    Navigator.of(context).pop();
-                    subscription.cancel();
-                  }
-                });
+                  subscription = adBloc.stream.listen((adState) {
+                    if (adState is RewardedAdLoaded) {
+                      adBloc.add(ShowRewardedAdEvent());
+                    } else if (adState is RewardedAdClosed) {
+                      Navigator.of(dialogContext).pop(); 
+                      context.read<FindwordBloc>().add(ContinueLevelEvent());
+                      subscription.cancel();
+                    } else if (adState is RewardedAdFailed) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to load ad: ${adState.error}')),
+                      );
+                      Navigator.of(dialogContext).pop();
+                      Navigator.of(context).pop();
+                      subscription.cancel();
+                    }
+                  });
+                }
               },
               child: const Text('Continua'),
-            ),
-            const SizedBox(width: 10),
+            ) : const SizedBox.shrink(),
+            if(!endGame)
+              const SizedBox(width: 10),
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();

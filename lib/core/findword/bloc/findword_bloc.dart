@@ -90,6 +90,7 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       if(newSelectedCol != null && currentState.selectedCol! > 0) {
         newSelectedCol = currentState.selectedCol! - 1;
       }
+      print(" newSelectedCol: $newSelectedCol, newSelectedRow: $newSelectedRow, newCurrentRow: $newCurrentRow");
       if(newSelectedCol != null && newSelectedCol <= 0) {
         newSelectedCol = 0;
         newSelectedRow = currentState.currentRow;
@@ -118,33 +119,64 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
     }
   }
 
-  Future<void> _onSubmitWord(SubmitWordEvent event, Emitter<FindwordState> emit) async {
+   Future<void> _onSubmitWord(SubmitWordEvent event, Emitter<FindwordState> emit) async {
     if (state is FindwordLoaded) {
       final currentState = state as FindwordLoaded;
       var newCurrentWord = List<List<Findwordcell>>.from(currentState.currentWord!);
-      for(var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
-        if(newCurrentWord[currentState.currentRow][i].letter == '') {
+
+      // Controlla che tutte le lettere siano state inserite
+      for (var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
+        if (newCurrentWord[currentState.currentRow][i].letter == '') {
           return;
         }
       }
-      for(var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
-        var letter = newCurrentWord[currentState.currentRow][i].letter;
-        if(letter == currentState.solution[i]) {
-          newCurrentWord[currentState.currentRow][i].type = "O";
-        } else {
-          _checkIfLetterExixtsButWrongPosition(letter, i, currentState.solution, newCurrentWord[currentState.currentRow]);
+
+      // Crea una mappa per contare le occorrenze nella soluzione
+      var solutionLetterCounts = <String, int>{};
+      for (var letter in currentState.solution) {
+        solutionLetterCounts[letter] = (solutionLetterCounts[letter] ?? 0) + 1;
+      }
+
+      // Primo passaggio: assegna il tipo "O" per le lettere nella posizione corretta
+      for (var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
+        var cell = newCurrentWord[currentState.currentRow][i];
+        if (cell.letter == currentState.solution[i]) {
+          cell.type = "O";
+          solutionLetterCounts[cell.letter!] = solutionLetterCounts[cell.letter!]! - 1;
         }
       }
-      _validateWord(newCurrentWord[currentState.currentRow], currentState.solution, emit);
 
-      var newSelectedCol = 0;
-      var newSelectedRow = currentState.currentRow + 1;
-
-      if(newCurrentWord[currentState.currentRow].every((cell) => cell.type == "O")) {
-        emit(currentState.copyWith(currentWord: newCurrentWord, completed: true));
+      // Secondo passaggio: assegna il tipo "%" o "X" per le lettere rimanenti
+      for (var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
+        var cell = newCurrentWord[currentState.currentRow][i];
+        if (cell.type != "O") {
+          if (solutionLetterCounts[cell.letter!] != null && solutionLetterCounts[cell.letter!]! > 0) {
+            cell.type = "%";
+            solutionLetterCounts[cell.letter!] = solutionLetterCounts[cell.letter!]! - 1;
+          } else {
+            cell.type = "X";
+          }
+        }
       }
 
-      emit(currentState.copyWith(currentWord: newCurrentWord, selectedCol: newSelectedCol, selectedRow: newSelectedRow, currentRow: currentState.currentRow + 1));
+      // Verifica se la parola è stata completata correttamente
+      if (newCurrentWord[currentState.currentRow].every((cell) => cell.type == "O")) {
+        emit(currentState.copyWith(currentWord: newCurrentWord, completed: true));
+        return;
+      }
+
+      if(currentState.currentRow + 1 == currentState.maxRow) {
+        emit(currentState.copyWith(currentWord: newCurrentWord, completed: false, failed: true));
+        return;
+      }
+
+      // Aggiorna lo stato per passare alla riga successiva
+      emit(currentState.copyWith(
+        currentWord: newCurrentWord,
+        selectedCol: 0,
+        selectedRow: currentState.currentRow + 1,
+        currentRow: currentState.currentRow + 1,
+      ));
     }
   }
 
@@ -155,35 +187,10 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
     }
   }
 
-  _checkIfLetterExixtsButWrongPosition(String? letter, int index, List<String> solution, List<Findwordcell> currentWord) {
-    if(!solution.contains(letter)) {
-      currentWord[index].type = "X";
-    } else {
-      currentWord[index].type = "%";
-    }
-  }
-
-  _validateWord(List<Findwordcell> currentWord, List<String> solution, Emitter<FindwordState> emit) {
-    for (var cell in currentWord) {
-      if(cell.type == "%") {
-        int countLetter = solution.where((lettera) => lettera == cell.letter).length;
-        int numberSolution = 0;
-        for (var i = 0; i < currentWord.length; i++) {
-          if(currentWord[i].letter == cell.letter) {
-            numberSolution++;
-            if(numberSolution > countLetter){
-              cell.type = "X";
-            }
-          }
-        }
-      }
-    }
-  }
-
   Future<void> _onContinueLevel(ContinueLevelEvent event, Emitter<FindwordState> emit) async {
     if (state is FindwordLoaded) {
       final currentState = state as FindwordLoaded;
-      emit(currentState.copyWith(currentRow: currentState.currentRow + 1, completed: false, maxRow: currentState.maxRow + 1));  
+      emit(currentState.copyWith(currentRow: currentState.currentRow + 1, completed: false, maxRow: currentState.maxRow + 1, failed: false, selectedCol: 0, selectedRow: currentState.currentRow + 1));  
     }
   }
 
