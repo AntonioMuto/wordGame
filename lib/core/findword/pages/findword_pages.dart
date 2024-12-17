@@ -70,6 +70,7 @@ class FindWordPage extends StatelessWidget {
                       builder: (context, state) {
                         if (state is FindwordLoaded) {
                                 return Keyboard(
+                                  onlyNumbers: false,
                                   onKeyTap: (letter) {
                                     if (letter == 'delete') {
                                       context.read<FindwordBloc>().add(RemoveLetterEvent());

@@ -4,13 +4,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/crossword_bloc.dart';
 
 class Keyboard extends StatelessWidget {
+  final bool onlyNumbers;
+  final List<String> row0 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   final List<String> row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
   final List<String> row2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
   final List<String> row3 = ['clean', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'delete'];
 
   final void Function(String letter) onKeyTap;
 
-  Keyboard({Key? key, required this.onKeyTap}) : super(key: key);
+  Keyboard({Key? key, required this.onKeyTap, required this.onlyNumbers}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +29,15 @@ class Keyboard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildKeyboardRow(row1, buttonSize + 2, spacing - 1),
-          const SizedBox(height: 12),
-          _buildKeyboardRow(row2, buttonSize + 4, spacing),
-          const SizedBox(height: 12),
-          _buildKeyboardRow(row3, buttonSize + 1, spacing - 1, isLastRow: true),
+          if (!onlyNumbers) ...[
+            _buildKeyboardRow(row1, buttonSize + 2, spacing - 1),
+            const SizedBox(height: 12),
+            _buildKeyboardRow(row2, buttonSize + 4, spacing),
+            const SizedBox(height: 12),
+            _buildKeyboardRow(row3, buttonSize + 1, spacing - 1, isLastRow: true),
+          ] else ...[
+            _buildKeyboardRow(row0, buttonSize + 2, spacing - 1),
+          ]
         ],
       ),
     );

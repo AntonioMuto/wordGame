@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:word_game/core/ads/bloc/ads_bloc.dart';
+import 'package:word_game/core/crossword/pages/keyboard.dart';
 import 'package:word_game/core/sudoku/bloc/sudoku_bloc.dart';
 
 class SudokuPage extends StatelessWidget {
@@ -31,34 +33,164 @@ class SudokuPage extends StatelessWidget {
         child: PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
-            if(!didPop){
+            if (!didPop) {
               _showExitConfirmationDialog(context);
             }
           },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Sudoku Level $level',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.blueGrey[900],
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                'Sudoku Level $level',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              centerTitle: true,
+              backgroundColor: Colors.blueGrey[900],
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-            ],
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCrosswordGrid(context, screenWidth),
+                  BlocBuilder<SudokuBloc, SudokuState>(
+                      builder: (context, state) {
+                        if (state is SudokuLoaded) {
+                          return Keyboard(
+                              onlyNumbers: true,
+                              onKeyTap: (letter) {
+                                  context
+                                      .read<SudokuBloc>().add(InsertLetterEvent(letter: letter));
+                              });
+                        }
+                        else {
+                          return const SizedBox.shrink();
+                        }
+                      }),
+                ],
+              ),
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCrosswordGrid(BuildContext context, double screenWidth) {
+    return BlocBuilder<SudokuBloc, SudokuState>(
+      builder: (context, state) {
+        if (state is SudokuLoaded) {
+          if (state.sudokuData.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          const rows = 9;
+          const cols = 9;
+          final cellSize = screenWidth / cols;
+          final crosswordHeight = cellSize * rows;
+
+          return Container(
+              height: crosswordHeight,
+              padding: const EdgeInsets.all(12.3),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(10.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
+                    crossAxisSpacing: 4.0,
+                    mainAxisSpacing: 4.0,
+                  ),
+                  itemCount: rows * cols,
+                  itemBuilder: (context, index) {
+                    final int row = index ~/ cols;
+                    final int col = index % cols;
+                    return AnimationConfiguration.staggeredList(
+                        position: index,
+                        duration: const Duration(milliseconds: 200),
+                        child: SlideAnimation(
+                          verticalOffset: 50.0,
+                          child: FadeInAnimation(
+                              child: _buildCrosswordCell(
+                                  context, row, col, state)),
+                        ));
+                  }));
+        }
+        return const Center(
+            child: CircularProgressIndicator(color: Colors.white));
+      },
+    );
+  }
+
+  Widget _buildCrosswordCell(
+      BuildContext context, int row, int col, SudokuLoaded state) {
+    final isSelected = state.selectedRow == row && state.selectedCol == col;
+    final cell = state.sudokuData[row][col];
+
+    // Calcola i bordi spessi per separare i blocchi 3x3
+    final bool isTopBorder = row % 3 == 0;
+    final bool isLeftBorder = col % 3 == 0;
+    final bool isBottomBorder =
+        (row == 8 || row == 5 || row == 2); // Ultima riga
+    final bool isRightBorder =
+        (col == 8 || col == 5 || col == 2); // Ultima colonna
+
+    return GestureDetector(
+      onTap: () => context
+          .read<SudokuBloc>()
+          .add(SelectSudokuCell(row: row, column: col)),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color.fromARGB(255, 238, 238, 238)
+              : Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: Colors.black,
+              width: isTopBorder ? 2.3 : 1.0,
+            ),
+            left: BorderSide(
+              color: Colors.black,
+              width: isLeftBorder ? 2.3 : 1.0,
+            ),
+            bottom: BorderSide(
+              color: Colors.black,
+              width: isBottomBorder ? 2.3 : 1.0,
+            ),
+            right: BorderSide(
+              color: Colors.black,
+              width: isRightBorder ? 2.3 : 1.0,
+            ),
+          ),
+          borderRadius: BorderRadius.circular(5.0),
+        ),
+        child: Center(
+          child: Text(
+            cell.value.toString(),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: cell.isHint
+                  ? const Color.fromARGB(255, 109, 109, 109)
+                  : Colors.black,
+            ),
+          ),
         ),
       ),
     );
@@ -76,10 +208,14 @@ class SudokuPage extends StatelessWidget {
           ),
           title: const Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green,), // Icona di completamento
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+              ), // Icona di completamento
               SizedBox(width: 9.0),
               Text('Complimenti!',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ],
           ),
           content: const Text(
@@ -112,7 +248,8 @@ class SudokuPage extends StatelessWidget {
                     subscription.cancel();
                   } else if (adState is RewardedAdFailed) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to load ad: ${adState.error}')),
+                      SnackBar(
+                          content: Text('Failed to load ad: ${adState.error}')),
                     );
                     Navigator.of(dialogContext).pop();
                     Navigator.of(context).pop();
@@ -139,7 +276,6 @@ class SudokuPage extends StatelessWidget {
     );
   }
 
-
   void _showExitConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -151,11 +287,13 @@ class SudokuPage extends StatelessWidget {
           ),
           title: const Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.red), // Icona di avvertimento
+              Icon(Icons.warning_amber_rounded,
+                  color: Colors.red), // Icona di avvertimento
               SizedBox(width: 8.0),
               Text(
                 'Conferma Uscita',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -199,5 +337,4 @@ class SudokuPage extends StatelessWidget {
       },
     );
   }
-
 }

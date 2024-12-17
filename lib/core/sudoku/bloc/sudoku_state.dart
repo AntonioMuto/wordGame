@@ -6,7 +6,7 @@ sealed class SudokuState {}
 final class SudokuInitial extends SudokuState {}
 
 final class SudokuLoaded extends SudokuState {
-  final List<List<String>> sudokuData;
+  List<List<Sudokucell>> sudokuData;
   final List<List<String>> sudokuSolution;
   final int? selectedRow;
   final int? selectedCol;
@@ -15,7 +15,7 @@ final class SudokuLoaded extends SudokuState {
   SudokuLoaded({required this.sudokuData , required this.sudokuSolution, this.selectedRow = -1, this.selectedCol = -1, this.completed = false});
 
   SudokuLoaded copyWith({
-    List<List<String>>? sudokuData,
+    List<List<Sudokucell>>? sudokuData,
     List<List<String>>? sudokuSolution,
     int? selectedRow,
     int? selectedCol,
