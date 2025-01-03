@@ -56,6 +56,7 @@ class SudokuBloc extends Bloc<SudokuEvent, SudokuState> {
       final currentState = state as SudokuLoaded;
       var newSudoku = List<List<Sudokucell>>.from(currentState.sudokuData!);
       newSudoku[currentState.selectedRow!][currentState.selectedCol!].value = event.letter;
+
       emit(currentState.copyWith(sudokuData: newSudoku));
     }
   }

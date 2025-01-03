@@ -4,6 +4,7 @@ import 'package:word_game/core/anagram/pages/anagram_page.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
 import 'package:word_game/core/crossword/pages/crossword_page.dart';
 import 'package:word_game/core/findword/pages/findword_pages.dart';
+import 'package:word_game/core/searchword/pages/searchword_page.dart';
 import 'package:word_game/core/sudoku/pages/sudoku_page.dart';
 import 'package:word_game/data_models/GameSection.dart';
 
@@ -132,6 +133,8 @@ class LevelsPage extends StatelessWidget {
         return FindWordPage(level: index + 1);
       case "Sudoku":
         return SudokuPage(level: index + 1);
+      case "Cerca le Parole":
+        return SearchWord(level: index + 1);
       default:
         
     }

@@ -1,0 +1,20 @@
+{
+    "solution": [
+      "CASA",
+      "ALBERO",
+      "GATTO",
+      "OLIO",
+      "AUTO",
+      "TETTO",
+      "POLLO"
+    ],
+    "initialData": [
+        ["C", "T", "P", "G", "A", "P", "A"],
+        ["A", "A", "O", "I", "L", "O", "O"],
+        ["S", "B", "L", "T", "O", "L", "G"],
+        ["A", "O", "T", "B", "T", "L", "A"],
+        ["A", "L", "G", "O", "E", "O", "T"],
+        ["O", "E", "T", "P", "U", "R", "T"],
+        ["C", "O", "I", "A", "U", "T", "O"]
+    ]
+}
