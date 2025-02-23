@@ -5,8 +5,10 @@ import '../bloc/crossword_bloc.dart';
 
 class Keyboard extends StatelessWidget {
   final bool onlyNumbers;
-  final List<String> rowNumber0 = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  final List<String> rowNumberClean = ['clean','delete'];
+  final List<String> rowNumber0 = ['1', '2', '3'];
+  final List<String> rowNumber1 = ['4', '5', '6'];
+  final List<String> rowNumber2 = ['7', '8', '9'];
+  final List<String> rowDelete = ['delete'];
   final List<String> row0 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   final List<String> row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
   final List<String> row2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
@@ -38,9 +40,13 @@ class Keyboard extends StatelessWidget {
             const SizedBox(height: 12),
             _buildKeyboardRow(row3, buttonSize + 1, spacing - 1, isLastRow: true),
           ] else ...[
-            _buildKeyboardRow(rowNumber0, buttonSize + 5, spacing),
-            const SizedBox(height: 22),
-            _buildKeyboardRow(rowNumberClean, buttonSize +5, spacing + 40),
+            _buildKeyboardRow(rowNumber0, buttonSize + 10, spacing + 10),
+            const SizedBox(height: 5),
+            _buildKeyboardRow(rowNumber1, buttonSize + 10, spacing + 10),
+            const SizedBox(height: 5),
+            _buildKeyboardRow(rowNumber2, buttonSize + 10, spacing + 10),
+            const SizedBox(height: 5),
+            _buildKeyboardRow(rowDelete, buttonSize , spacing + 20),
           ]
         ],
       ),

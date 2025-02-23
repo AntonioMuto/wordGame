@@ -17,3 +17,5 @@ class InsertLetterEvent extends SudokuEvent {
 
   InsertLetterEvent({required this.letter});
 }
+
+class RemoveLetterEvent extends SudokuEvent {}

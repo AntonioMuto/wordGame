@@ -13,6 +13,7 @@ class SudokuBloc extends Bloc<SudokuEvent, SudokuState> {
     on<FetchSudokuData>(_fetchSudokuData);
     on<SelectSudokuCell>(_selectSudokuCell);
     on<InsertLetterEvent>(_insertLetter);
+    on<RemoveLetterEvent>(_deleteLetter);
   }
 
   Future<void> _fetchSudokuData(FetchSudokuData event, Emitter<SudokuState> emit) async {
@@ -56,6 +57,16 @@ class SudokuBloc extends Bloc<SudokuEvent, SudokuState> {
       final currentState = state as SudokuLoaded;
       var newSudoku = List<List<Sudokucell>>.from(currentState.sudokuData!);
       newSudoku[currentState.selectedRow!][currentState.selectedCol!].value = event.letter;
+
+      emit(currentState.copyWith(sudokuData: newSudoku));
+    }
+  }
+
+  Future<void> _deleteLetter(RemoveLetterEvent event, Emitter<SudokuState> emit) async {
+    if (state is SudokuLoaded) {
+      final currentState = state as SudokuLoaded;
+      var newSudoku = List<List<Sudokucell>>.from(currentState.sudokuData!);
+      newSudoku[currentState.selectedRow!][currentState.selectedCol!].value = '';
 
       emit(currentState.copyWith(sudokuData: newSudoku));
     }

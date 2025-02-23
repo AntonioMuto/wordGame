@@ -18,15 +18,17 @@ class LevelsPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(section.name.toUpperCase()),
         centerTitle: true,
+        backgroundColor: Colors.blueGrey[900],
+        elevation: 0,
       ),
       body: Container(
         decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
+          gradient: LinearGradient(
+            colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: GridView.builder(
@@ -34,6 +36,7 @@ class LevelsPage extends StatelessWidget {
               crossAxisCount: 4, // Numero di colonne nella griglia
               crossAxisSpacing: 15.0, // Spaziatura orizzontale tra i quadratini
               mainAxisSpacing: 15.0, // Spaziatura verticale tra i quadratini
+              childAspectRatio: 1, // Mantieni i quadratini quadrati
             ),
             itemCount: 200, // Numero totale di quadratini
             itemBuilder: (context, index) {
@@ -52,7 +55,8 @@ class LevelsPage extends StatelessWidget {
                     );
                   }
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(color: Colors.black, width: 1),
@@ -78,23 +82,24 @@ class LevelsPage extends StatelessWidget {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Aggiungi l'immagine di sfondo
-                      Positioned.fill(
-                        child: Opacity(
-                          opacity: isLevelUnlocked ? 0.05 : 0, // Maggiore trasparenza se bloccato
-                          child: Image.asset(
-                            'assets/images/${section.gameImage}.png',
-                            fit: BoxFit.cover,
+                      // Immagine di sfondo per i livelli sbloccati
+                      if (isLevelUnlocked)
+                        Positioned.fill(
+                          child: Opacity(
+                            opacity: 0.1, // Trasparenza dell'immagine
+                            child: Image.asset(
+                              'assets/images/${section.gameImage}.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                      ),
-                      // Mostra il numero del livello
+                      // Numero del livello
                       Center(
                         child: Text(
-                          '${index + 1}', // Mostra il numero del quadratino
+                          '${index + 1}',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 22,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(
@@ -106,11 +111,11 @@ class LevelsPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Icona di blocco
+                      // Icona di blocco per i livelli bloccati
                       if (!isLevelUnlocked)
                         const Positioned(
                           bottom: 5,
-                          child: Icon(Icons.lock, color: Colors.white, size: 20),
+                          child: Icon(Icons.lock, color: Colors.white, size: 24),
                         ),
                     ],
                   ),
@@ -136,7 +141,7 @@ class LevelsPage extends StatelessWidget {
       case "Cerca le Parole":
         return SearchWord(level: index + 1);
       default:
-        
+        return const Placeholder(); // Gestisci il caso predefinito
     }
   }
 }

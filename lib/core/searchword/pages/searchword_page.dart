@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -254,58 +255,120 @@ class SearchWord extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: Colors.blueGrey[800],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          title: const Row(
+        return Container(
+          alignment: Alignment.center,
+          child: Stack(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.red),
-              SizedBox(width: 8.0),
-              Text(
-                'Conferma Uscita',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              BackdropFilter(
+                filter: ImageFilter.blur(
+                    sigmaX: 5, sigmaY: 5), // Intensità del blur
+                child: Container(
+                  color: Colors.black.withOpacity(0.3), // Colore di overlay
+                ),
+              ),
+              // Dialog personalizzato
+              Dialog(
+                backgroundColor:
+                    Colors.transparent, // Sfondo trasparente per il blur
+                insetPadding:
+                    const EdgeInsets.all(20), // Margine intorno al dialog
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey[900], // Colore di sfondo del dialog
+                    borderRadius:
+                        BorderRadius.circular(20), // Bordi arrotondati
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 80, 80, 80)
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min, // Adatta il contenuto
+                    children: [
+                      // Icona e titolo
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.warning_amber_rounded,
+                              color: Colors.red.shade400, size: 32),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Conferma Uscita',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Messaggio
+                      const Text(
+                        'Sei sicuro di voler uscire dal livello corrente?',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      // Pulsanti
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Pulsante "No"
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Colors.redAccent.withOpacity(0.9),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 5,
+                              shadowColor: Colors.redAccent.withOpacity(0.5),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Chiudi il dialog
+                            },
+                            child: const Text('No'),
+                          ),
+                          const SizedBox(width: 16),
+                          // Pulsante "Sì"
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.withOpacity(0.9),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 5,
+                              shadowColor: Colors.green.withOpacity(0.5),
+                            ),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(); // Chiudi il dialog
+                              Navigator.of(context).pop(); // Torna indietro
+                            },
+                            child: const Text('Sì'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-          content: const Text(
-            'Sei sicuro di voler uscire dal livello corrente?',
-            style: TextStyle(color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('No'),
-            ),
-            const SizedBox(width: 10),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Sì'),
-            ),
-          ],
         );
       },
     );

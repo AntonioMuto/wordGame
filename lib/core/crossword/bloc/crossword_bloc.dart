@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'dart:convert'; // Per decodificare la risposta JSON
 import 'package:http/http.dart' as http;
+import 'package:word_game/controllers/playSounds_controller.dart';
 import 'package:word_game/data_models/CrossWordCell.dart';
 
 part 'crossword_event.dart';
@@ -106,7 +107,10 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
           }
         }
         var status = checkWords(updatedData, loadedState.highlightedCells, loadedState.highlightedCellsSecondary);
-        
+
+        if(status['completed'] == true) {
+          PlaysoundsController().playSoundCompletedLevel();
+        } 
         if((row > 0 && row >= loadedState.crosswordData[row-1].length) || (col > 0 && col >= loadedState.crosswordData[col-1].length)) {
           emit(loadedState.copyWith(crosswordData: status['crosswordData'], selectedRow: -1, selectedCol: -1, highlightedCells: [], definition: loadedState.definition, completed: status['completed'] ? true : false));
           return;
@@ -320,7 +324,10 @@ List<List<CrosswordCell>> _parseCrosswordData(Map<String, dynamic> json) {
             everySecondaryWordIsCorrect = false;
           }
         }
+      } else {
+        everySecondaryWordIsCorrect = false;
       }
+
       isCorrectSecondary = everySecondaryWordIsCorrect;
 
       // Verifica delle parole principali
@@ -362,6 +369,10 @@ List<List<CrosswordCell>> _parseCrosswordData(Map<String, dynamic> json) {
           }
         }
       }
+
+      if(isCorrectPrimary || isCorrectSecondary){
+        PlaysoundsController().playSoundCorrectWord();
+      } 
 
       var status = {
         "isCorrect": isCorrectPrimary,

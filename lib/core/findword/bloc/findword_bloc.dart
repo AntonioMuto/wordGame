@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
+import 'package:word_game/controllers/playSounds_controller.dart';
 import 'package:word_game/data_models/FindWordCell.dart';
 
 part 'findword_event.dart';
@@ -63,7 +64,6 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       var newSelectedRow = currentState.selectedRow;
       var newCurrentRow = currentState.currentRow;
 
-      print(currentState.currentRow);
       if(newSelectedCol != null && currentState.currentWord[currentState.currentRow].length - 1 > currentState.selectedCol!) {
         newSelectedCol = currentState.selectedCol! + 1;
       }
@@ -140,7 +140,7 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       // Primo passaggio: assegna il tipo "O" per le lettere nella posizione corretta
       for (var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
         var cell = newCurrentWord[currentState.currentRow][i];
-        if (cell.letter == currentState.solution[i]) {
+        if (cell.letter == currentState.solution[i] && cell.type != "O") {
           cell.type = "O";
           solutionLetterCounts[cell.letter!] = solutionLetterCounts[cell.letter!]! - 1;
         }
@@ -161,16 +161,30 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
 
       // Verifica se la parola è stata completata correttamente
       if (newCurrentWord[currentState.currentRow].every((cell) => cell.type == "O")) {
+        PlaysoundsController().playSoundCompletedLevel();
         emit(currentState.copyWith(currentWord: newCurrentWord, completed: true));
         return;
       }
 
       if(currentState.currentRow + 1 == currentState.maxRow) {
+        PlaysoundsController().playSoundFailedLevel();
         emit(currentState.copyWith(currentWord: newCurrentWord, completed: false, failed: true));
         return;
       }
+      // var selectedCol = 0;
+      // for(var i = 0; i < newCurrentWord[currentState.currentRow].length; i++) {
+      //   var wordCell = newCurrentWord[currentState.currentRow][i];
+      //   if(wordCell.type == "O") {
+      //     newCurrentWord[currentState.currentRow + 1][i].type = "O";
+      //     newCurrentWord[currentState.currentRow + 1][i].letter = wordCell.letter;
+      //   } else if((wordCell.type == "%" || wordCell.type == "X") && selectedCol == 0) {
+      //       selectedCol = i;
+      //   }
+      // }
+      if(newCurrentWord[currentState.currentRow].any((cell) => cell.type == "O" || cell.type == "%")) {
+        PlaysoundsController().playSoundCorrectWord();
+      }
 
-      // Aggiorna lo stato per passare alla riga successiva
       emit(currentState.copyWith(
         currentWord: newCurrentWord,
         selectedCol: 0,

@@ -3,6 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
+import 'package:word_game/controllers/playSounds_controller.dart';
 
 part 'anagram_event.dart';
 part 'anagram_state.dart';
@@ -63,7 +64,12 @@ class AnagramBloc extends Bloc<AnagramEvent, AnagramState> {
 
         bool completed = false;
         if(listEquals(updatedWord, currentState.solution)){
+          PlaysoundsController().playSoundCompletedLevel();
           completed = true;
+        } else {
+          if(updatedWord.every((element) => element != '')){
+            PlaysoundsController().playSoundWrongWord();
+          }
         }
 
         emit(currentState.copyWith(
