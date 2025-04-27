@@ -8,6 +8,8 @@ import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/anagram/bloc/anagram_bloc.dart';
 import 'package:word_game/core/timer/pages/timer.dart';
 
+import '../../timer/bloc/timer_bloc.dart';
+
 class AnagramPage extends StatelessWidget {
   final int level;
 
@@ -19,10 +21,12 @@ class AnagramPage extends StatelessWidget {
         providers: [
           BlocProvider(create: (_) => AnagramBloc()..add(FetchAnagramData())),
           BlocProvider(create: (_) => AdsBloc()..add(LoadBannerAdEvent())),
+          BlocProvider(create: (_) => TimerBloc()),
         ],
         child: BlocListener<AnagramBloc, AnagramState>(
           listener: (context, state) {
             if (state is AnagramLoaded && state.completed) {
+              context.read<TimerBloc>().add(TimerStopped());
               _showCompletionDialog(context);
             }
           },
