@@ -6,6 +6,7 @@ class GameSection {
   final int level;
   final double progress;
   final Color color;
+  final int currentLevel;
 
   GameSection({
     required this.name,
@@ -13,5 +14,6 @@ class GameSection {
     required this.level,
     required this.progress,
     required this.color,
+    required this.currentLevel,
   });
 }

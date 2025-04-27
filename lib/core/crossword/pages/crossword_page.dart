@@ -44,8 +44,8 @@ class CrosswordPage extends StatelessWidget {
           child: Scaffold(
             appBar: AppBar(
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back,
-                    color: Colors.white), // Freccia indietro
+                icon: Icon(Icons.arrow_back,
+                    color: Theme.of(context).primaryColorDark), // Freccia indietro
                 onPressed: () {
                   // Mostra un dialog di conferma
                   _showExitConfirmationDialog(context);
@@ -53,17 +53,17 @@ class CrosswordPage extends StatelessWidget {
               ),
               title: Text(
                 'Crossword Level $level',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: Theme.of(context).primaryColorDark),
               ),
               centerTitle: true,
-              backgroundColor: Colors.blueGrey[900],
+              backgroundColor: Theme.of(context).primaryColor,
               elevation: 4.0,
             ),
             body: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade600],
+                  colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -156,8 +156,11 @@ class CrosswordPage extends StatelessWidget {
                         ));
                   }));
         }
-        return const Center(
-            child: CircularProgressIndicator(color: Colors.white));
+        return Padding(
+          padding: EdgeInsets.only(top: (MediaQuery.of(context).size.height / 2) - 100),
+          child: Center(
+              child: CircularProgressIndicator(color: Theme.of(context).primaryColorDark)),
+        );
       },
     );
   }
@@ -277,102 +280,102 @@ class CrosswordPage extends StatelessWidget {
   }
 
   Widget _buildBannerAd(BuildContext context) {
-    return BlocBuilder<AdsBloc, AdsState>(
-      builder: (context, adsState) {
-        if (adsState is BannerAdLoaded) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            height: adsState.bannerAd.size.height.toDouble(),
-            width: adsState.bannerAd.size.width.toDouble(),
-            child: AdWidget(ad: adsState.bannerAd),
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
-  }
+  return BlocBuilder<AdsBloc, AdsState>(
+    builder: (context, adsState) {
+      // Fallback size (es: standard 320x50 per banner)
+      const double bannerHeight = 50.0;
+      const double bannerWidth = 320.0;
+
+      if (adsState is BannerAdLoaded) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          height: adsState.bannerAd.size.height.toDouble(),
+          width: adsState.bannerAd.size.width.toDouble(),
+          color: Colors.transparent,
+          child: AdWidget(ad: adsState.bannerAd),
+        );
+      }
+
+      // Quando sta caricando o rinfrescando, mantiene lo spazio
+      return const SizedBox.shrink();
+    },
+  );
+}
 
   void _showCompletionDialog(BuildContext context) {
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext dialogContext) {
-      return Container(
-        alignment: Alignment.center,
-        child: Stack(
-          children: [
-            BackdropFilter(
-              filter: ImageFilter.blur(
-                  sigmaX: 5, sigmaY: 5), // Intensità del blur
-              child: Container(
-                color: Colors.black.withOpacity(0.3), // Colore di overlay
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.shade900.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade700),
               ),
-            ),
-            // Dialog personalizzato
-            Dialog(
-              backgroundColor: Colors.transparent, // Sfondo trasparente per il blur
-              insetPadding: const EdgeInsets.all(20), // Margine intorno al dialog
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey[900], // Colore di sfondo del dialog
-                  borderRadius: BorderRadius.circular(20), // Bordi arrotondati
-                  border: Border.all(
-                    color: const Color.fromARGB(255, 119, 119, 119),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emoji_events_rounded,
+                      color: Colors.amber.shade300, size: 40),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Livello completato!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                      offset: const Offset(0, 4),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Vuoi raddoppiare le ricompense guardando un annuncio?',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
                     ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min, // Adatta il contenuto
-                  children: [
-                    // Icona e titolo
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle,
-                            color: Colors.green.shade400, size: 32),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Complimenti!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Messaggio
-                    const Text(
-                      'Hai completato il livello. Vuoi raddoppiare le ricompense?',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    // Pulsanti
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Pulsante "Raddoppia"
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.withOpacity(0.9),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
+                            side: BorderSide(color: Colors.white70),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            elevation: 5,
-                            shadowColor: Colors.green.withOpacity(0.5),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Chiudi'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.greenAccent.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           onPressed: () {
                             final adBloc = context.read<AdsBloc>();
@@ -385,49 +388,28 @@ class CrosswordPage extends StatelessWidget {
                                 adBloc.add(ShowRewardedAdEvent());
                               } else if (adState is RewardedAdClosed) {
                                 Navigator.of(dialogContext).pop();
-                                Navigator.of(context).pop();
                                 subscription.cancel();
                               } else if (adState is RewardedAdFailed) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content: Text(
-                                          'Failed to load ad: ${adState.error}')),
+                                    content: Text(
+                                        'Errore caricamento annuncio: ${adState.error}'),
+                                  ),
                                 );
                                 Navigator.of(dialogContext).pop();
-                                Navigator.of(context).pop();
                                 subscription.cancel();
                               }
                             });
                           },
                           child: const Text('Raddoppia'),
                         ),
-                        const SizedBox(width: 16),
-                        // Pulsante "Chiudi" in rosso
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent.withOpacity(0.9),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 5,
-                            shadowColor: Colors.redAccent.withOpacity(0.5),
-                          ),
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Chiudi'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       );
     },
@@ -436,125 +418,96 @@ class CrosswordPage extends StatelessWidget {
 
 
   void _showExitConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Container(
-          alignment: Alignment.center,
-          child: Stack(
-            children: [
-              BackdropFilter(
-                filter: ImageFilter.blur(
-                    sigmaX: 5, sigmaY: 5), // Intensità del blur
-                child: Container(
-                  color: Colors.black.withOpacity(0.3), // Colore di overlay
-                ),
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext dialogContext) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.shade900.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade700),
               ),
-              // Dialog personalizzato
-              Dialog(
-                backgroundColor:
-                    Colors.transparent, // Sfondo trasparente per il blur
-                insetPadding:
-                    const EdgeInsets.all(20), // Margine intorno al dialog
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.blueGrey[900], // Colore di sfondo del dialog
-                    borderRadius:
-                        BorderRadius.circular(20), // Bordi arrotondati
-                    border: Border.all(
-                      color: const Color.fromARGB(255, 119, 119, 119)
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.orangeAccent.shade200, size: 40),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Uscire dal livello?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    textAlign: TextAlign.center,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min, // Adatta il contenuto
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Sei sicuro di voler abbandonare il livello attuale? I tuoi progressi potrebbero andare persi.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Icona e titolo
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: Colors.red.shade400, size: 32),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Conferma Uscita',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: BorderSide(color: Colors.white70),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        ],
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: const Text('Annulla'),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      // Messaggio
-                      const Text(
-                        'Sei sicuro di voler uscire dal livello corrente?',
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      // Pulsanti
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Pulsante "No"
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Colors.redAccent.withOpacity(0.9),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 5,
-                              shadowColor: Colors.redAccent.withOpacity(0.5),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Chiudi il dialog
-                            },
-                            child: const Text('No'),
                           ),
-                          const SizedBox(width: 16),
-                          // Pulsante "Sì"
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.withOpacity(0.9),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 5,
-                              shadowColor: Colors.green.withOpacity(0.5),
-                            ),
-                            onPressed: () {
-                              Navigator.of(dialogContext).pop(); // Chiudi il dialog
-                              Navigator.of(context).pop(); // Torna indietro
-                            },
-                            child: const Text('Sì'),
-                          ),
-                        ],
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(); // Chiudi modale
+                            Navigator.of(context).pop(); // Esci dalla schermata
+                          },
+                          child: const Text('Esci'),
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 }

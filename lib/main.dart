@@ -9,8 +9,10 @@ import 'package:word_game/core/home/bloc/home_bloc.dart';
 import 'package:word_game/core/home/pages/home_page.dart';
 import 'package:word_game/core/navigation/bloc/navigation_bloc.dart';
 import 'package:word_game/core/navigation/pages/main_page.dart';
+import 'package:word_game/core/profile/profile_bloc.dart';
 import 'package:word_game/core/sign_in/bloc/sign_in_bloc.dart';
 import 'package:word_game/core/sign_in/pages/sign_in_page.dart';
+import 'package:word_game/core/theme/bloc/theme_state.dart';
 
 import 'core/theme/bloc/theme_bloc.dart';
 
@@ -33,7 +35,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => ThemeBloc()),
-        BlocProvider(create: (context) => NavigationBloc()),
+        BlocProvider(create: (context) => NavigationBloc())
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {

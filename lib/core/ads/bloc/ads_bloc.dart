@@ -10,6 +10,7 @@ part 'ads_state.dart';
 class AdsBloc extends Bloc<AdsEvent, AdsState> {
   BannerAd? _bannerAd;
   InterstitialAd? _interstitialAd;
+  Timer? _bannerRefreshTimer;
   RewardedInterstitialAd? _rewardedAd;
 
   AdsBloc() : super(AdsInitial()) {
@@ -22,44 +23,58 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   }
 
   /// Logica per caricare un Banner Ad
-  Future<void> _onLoadBannerAd(LoadBannerAdEvent event, Emitter<AdsState> emit) async {
-  emit(AdsLoading()); // Stato di caricamento iniziale
+  Future<void> _onLoadBannerAd(
+      LoadBannerAdEvent event, Emitter<AdsState> emit) async {
+    emit(AdsLoading());
 
-  final completer = Completer<void>();
+    // Cancella eventuale timer precedente
+    _bannerRefreshTimer?.cancel();
 
-  final bannerAd = BannerAd(
-    size: AdSize.banner,
-    adUnitId: 'ca-app-pub-6948080890496729/2835459661',
-    request: const AdRequest(),
-    listener: BannerAdListener(
-      onAdLoaded: (ad) {
-        _bannerAd = ad as BannerAd;
-        emit(BannerAdLoaded(_bannerAd!));
-        completer.complete(); // Completa il Future
-      },
-      onAdFailedToLoad: (ad, error) {
-        ad.dispose();
-        emit(BannerAdFailed(error.toString()));
-        completer.completeError(error); // Completa con errore
-      },
-    ),
-  );
+    // Dispose del banner attuale se esiste
+    _bannerAd?.dispose();
 
-  try {
-    await bannerAd.load();
-    await completer.future; // Aspetta il completamento del caricamento
-  } catch (e) {
-    emit(BannerAdFailed(e.toString()));
+    final completer = Completer<void>();
+
+    final bannerAd = BannerAd(
+      size: AdSize.banner,
+      adUnitId: 'ca-app-pub-6948080890496729/2835459661',
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          _bannerAd = ad as BannerAd;
+          emit(BannerAdLoaded(_bannerAd!));
+          completer.complete();
+
+          // Imposta il timer per ricaricare ogni 2 minuti
+          _bannerRefreshTimer = Timer.periodic(const Duration(minutes: 2), (_) {
+            add(LoadBannerAdEvent()); // Ri-trigger dell'evento
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          emit(BannerAdFailed(error.toString()));
+          completer.completeError(error);
+        },
+      ),
+    );
+
+    try {
+      await bannerAd.load();
+      await completer.future;
+    } catch (e) {
+      emit(BannerAdFailed(e.toString()));
+    }
   }
-}
 
-  Future<void> _onLoadInterstitialAd(LoadInterstitialAdEvent event, Emitter<AdsState> emit) async {
+  Future<void> _onLoadInterstitialAd(
+      LoadInterstitialAdEvent event, Emitter<AdsState> emit) async {
     emit(AdsLoading());
 
     final completer = Completer<void>();
 
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-6948080890496729/6753258029', // Il tuo Interstitial Ad Unit ID
+      adUnitId:
+          'ca-app-pub-6948080890496729/6753258029', // Il tuo Interstitial Ad Unit ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -106,7 +121,8 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   }
 
   /// Logica per mostrare un Interstitial Ad
-  Future<void> _onShowInterstitialAd(ShowInterstitialAdEvent event, Emitter<AdsState> emit) async {
+  Future<void> _onShowInterstitialAd(
+      ShowInterstitialAdEvent event, Emitter<AdsState> emit) async {
     if (_interstitialAd != null) {
       try {
         await _interstitialAd!.show();
@@ -118,12 +134,13 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
     }
   }
 
-  Future<void> _onLoadRewardedAd(LoadRewardedAdEvent event, Emitter<AdsState> emit) async {
-
+  Future<void> _onLoadRewardedAd(
+      LoadRewardedAdEvent event, Emitter<AdsState> emit) async {
     final completer = Completer<void>();
 
     RewardedInterstitialAd.load(
-      adUnitId: 'ca-app-pub-6948080890496729/8313751704', // Il tuo Rewarded Ad Unit ID
+      adUnitId:
+          'ca-app-pub-6948080890496729/8313751704', // Il tuo Rewarded Ad Unit ID
       request: const AdRequest(),
       rewardedInterstitialAdLoadCallback: RewardedInterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -164,7 +181,8 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   }
 
   /// Logica per mostrare il Rewarded Ad
-  Future<void> _onShowRewardedAd(ShowRewardedAdEvent event, Emitter<AdsState> emit) async {
+  Future<void> _onShowRewardedAd(
+      ShowRewardedAdEvent event, Emitter<AdsState> emit) async {
     if (_rewardedAd != null) {
       try {
         await _rewardedAd!.show(onUserEarnedReward: (ad, reward) {
@@ -181,6 +199,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   /// Libera il banner ad quando non è più necessario
   @override
   Future<void> close() {
+    _bannerRefreshTimer?.cancel();
     _bannerAd?.dispose();
     _interstitialAd?.dispose();
     _rewardedAd?.dispose();

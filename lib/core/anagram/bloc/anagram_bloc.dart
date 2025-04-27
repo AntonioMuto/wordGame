@@ -16,6 +16,7 @@ class AnagramBloc extends Bloc<AnagramEvent, AnagramState> {
     on<RemoveLastLetterEvent>(_onRemoveLastLetterEvent);
     on<ResetWordAnagramEvent>(_onResetWordEvent);
     on<RemoveElementEventByPosition>(_onRemoveElementEventByPosition);
+    on<StartGameEvent>(_onStartGame);
   }
 
   Future<void> _onFetchAnagramData(FetchAnagramData event, Emitter<AnagramState> emit) async {
@@ -63,19 +64,23 @@ class AnagramBloc extends Bloc<AnagramEvent, AnagramState> {
         updatedUsedLetters[event.position] = event.letter;
 
         bool completed = false;
+        bool isAttempt = false;
         if(listEquals(updatedWord, currentState.solution)){
           PlaysoundsController().playSoundCompletedLevel();
           completed = true;
+          isAttempt = true;
         } else {
           if(updatedWord.every((element) => element != '')){
             PlaysoundsController().playSoundWrongWord();
+            isAttempt = true;
           }
         }
 
         emit(currentState.copyWith(
           currentWord: updatedWord,
           usedLetters: updatedUsedLetters,
-          completed: completed
+          completed: completed,
+          attempts: currentState.attempts + 1,
         ));
       }
     }
@@ -170,6 +175,15 @@ class AnagramBloc extends Bloc<AnagramEvent, AnagramState> {
       emit(currentState.copyWith(
         currentWord: updatedWord,
         usedLetters: updatedUsedLetters,
+      ));
+    }
+  }
+
+  Future<void> _onStartGame (StartGameEvent event, Emitter<AnagramState> emit) async {
+    if (state is AnagramLoaded) {
+      final currentState = state as AnagramLoaded;
+      emit(currentState.copyWith(
+        started: true
       ));
     }
   }

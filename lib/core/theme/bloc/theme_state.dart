@@ -1,30 +1,42 @@
-part of 'theme_bloc.dart';
+import 'package:flutter/material.dart';
+import 'appColors.dart'; // importa la tua classe di colori
 
 class ThemeState {
   final ThemeData themeData;
 
   ThemeState(this.themeData);
 
-  static ThemeState get darkTheme =>
-      ThemeState(ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color.fromARGB(255, 47, 47, 47),
-          foregroundColor: Colors.white,
-          shape: Border(bottom: BorderSide(color: Color.fromARGB(255, 87, 87, 87))),
+  static ThemeState get darkTheme => ThemeState(
+        ThemeData.dark().copyWith(
+          primaryColor: AppColors.darkBackground,
+          primaryColorDark: AppColors.darkSecondaryColor,
+          scaffoldBackgroundColor: AppColors.darkBackground,
+          canvasColor: AppColors.darkBottomAppBar,
+          cardColor: AppColors.darkCard,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: AppColors.darkAppBarBackground,
+            foregroundColor: AppColors.darkAppBarForeground,
+            shape: Border(
+              bottom: BorderSide(color: AppColors.darkAppBarBorder),
+            ),
+          ),
         ),
-        cardColor: const Color.fromARGB(255, 36, 36, 36),
-        
-      ));
+      );
 
-  static ThemeState get lightTheme =>
-      ThemeState(ThemeData.light().copyWith(
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color.fromARGB(255, 47, 47, 47),
-          foregroundColor: Colors.white,
-          shape: Border(bottom: BorderSide(color: Color.fromARGB(255, 87, 87, 87))),
+  static ThemeState get lightTheme => ThemeState(
+        ThemeData.light().copyWith(
+          primaryColor: AppColors.lightBackground,
+          primaryColorDark: AppColors.lightSecondaryColor,
+          scaffoldBackgroundColor: AppColors.lightBackground,
+          canvasColor: AppColors.lightBottomAppBar,
+          cardColor: AppColors.lightCard,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: AppColors.lightAppBarBackground,
+            foregroundColor: AppColors.lightAppBarForeground,
+            shape: Border(
+              bottom: BorderSide(color: AppColors.lightAppBarBorder),
+            ),
+          ),
         ),
-        cardColor: Colors.white,
-      ));
+      );
 }

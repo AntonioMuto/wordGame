@@ -23,6 +23,8 @@ class RemoveLastLetterEvent extends AnagramEvent {}
 
 class ResetWordAnagramEvent extends AnagramEvent {}
 
+class StartGameEvent extends AnagramEvent {}
+
 
 class RemoveElementEventByPosition extends AnagramEvent {
   final int position;

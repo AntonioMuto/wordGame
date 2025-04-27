@@ -1,67 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../bloc/crossword_bloc.dart';
+import 'package:flutter/services.dart';
 
 class Keyboard extends StatelessWidget {
   final bool onlyNumbers;
+  final void Function(String letter) onKeyTap;
+
   final List<String> rowNumber0 = ['1', '2', '3'];
   final List<String> rowNumber1 = ['4', '5', '6'];
   final List<String> rowNumber2 = ['7', '8', '9'];
   final List<String> rowDelete = ['delete'];
-  final List<String> row0 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+
   final List<String> row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
   final List<String> row2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
   final List<String> row3 = ['clean', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'delete'];
-
-  final void Function(String letter) onKeyTap;
 
   Keyboard({Key? key, required this.onKeyTap, required this.onlyNumbers}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double buttonSize = screenWidth / 10 - 8;
-    const double spacing = 7.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double buttonWidth = constraints.maxWidth / 9.8;
+        final double buttonHeight = buttonWidth * 1.2;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.blueGrey[900],
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12.0,),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (!onlyNumbers) ...[
-            _buildKeyboardRow(row1, buttonSize + 2, spacing - 1),
-            const SizedBox(height: 12),
-            _buildKeyboardRow(row2, buttonSize + 4, spacing),
-            const SizedBox(height: 12),
-            _buildKeyboardRow(row3, buttonSize + 1, spacing - 1, isLastRow: true),
-          ] else ...[
-            _buildKeyboardRow(rowNumber0, buttonSize + 10, spacing + 10),
-            const SizedBox(height: 5),
-            _buildKeyboardRow(rowNumber1, buttonSize + 10, spacing + 10),
-            const SizedBox(height: 5),
-            _buildKeyboardRow(rowNumber2, buttonSize + 10, spacing + 10),
-            const SizedBox(height: 5),
-            _buildKeyboardRow(rowDelete, buttonSize , spacing + 20),
-          ]
-        ],
-      ),
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: onlyNumbers
+                ? [
+                    _buildRow(rowNumber0, buttonWidth, buttonHeight),
+                    const SizedBox(height: 6),
+                    _buildRow(rowNumber1, buttonWidth, buttonHeight),
+                    const SizedBox(height: 6),
+                    _buildRow(rowNumber2, buttonWidth, buttonHeight),
+                    const SizedBox(height: 6),
+                    _buildRow(rowDelete, buttonWidth, buttonHeight),
+                  ]
+                : [
+                    _buildRow(row1, buttonWidth, buttonHeight),
+                    const SizedBox(height: 8),
+                    _buildRow(row2, buttonWidth, buttonHeight),
+                    const SizedBox(height: 8),
+                    _buildRow(row3, buttonWidth, buttonHeight),
+                  ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildKeyboardRow(List<String> letters, double buttonSize, double spacing, {bool isLastRow = false}) {
+  Widget _buildRow(List<String> letters, double width, double height) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: letters.map((letter) {
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: spacing / 2),
+          padding: const EdgeInsets.symmetric(horizontal: 1),
           child: AnimatedKey(
             letter: letter,
-            buttonSize: buttonSize,
+            buttonWidth: letter == 'delete' || letter == 'clean' ? width * 1 : width * 0.9,
+            buttonHeight: height,
             onKeyTap: onKeyTap,
           ),
         );
@@ -72,34 +74,44 @@ class Keyboard extends StatelessWidget {
 
 class AnimatedKey extends StatefulWidget {
   final String letter;
-  final double buttonSize;
+  final double buttonWidth;
+  final double buttonHeight;
   final void Function(String letter) onKeyTap;
 
-  const AnimatedKey({Key? key, required this.letter, required this.buttonSize, required this.onKeyTap}) : super(key: key);
+  const AnimatedKey({
+    Key? key,
+    required this.letter,
+    required this.buttonWidth,
+    required this.buttonHeight,
+    required this.onKeyTap,
+  }) : super(key: key);
 
   @override
-  _AnimatedKeyState createState() => _AnimatedKeyState();
+  State<AnimatedKey> createState() => _AnimatedKeyState();
 }
 
 class _AnimatedKeyState extends State<AnimatedKey> with TickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late Animation<double> _scale;
+  bool _isPressed = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
       vsync: this,
+      duration: const Duration(milliseconds: 120),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
   }
 
   void _onTap() {
+    HapticFeedback.lightImpact();
     _controller.forward().then((_) => _controller.reverse());
-    widget.onKeyTap(widget.letter); // Chiama il callback con la lettera.
+    widget.onKeyTap(widget.letter);
   }
 
   @override
@@ -110,49 +122,48 @@ class _AnimatedKeyState extends State<AnimatedKey> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final isSpecial = widget.letter == 'delete' || widget.letter == 'clean';
+
     return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
       onTap: _onTap,
       child: AnimatedBuilder(
-        animation: _controller,
+        animation: _scale,
         builder: (context, child) {
           return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
+            scale: _scale.value,
+            child: Container(
+              width: widget.buttonWidth,
+              height: widget.buttonHeight,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: widget.letter == 'delete' || widget.letter == 'clean'
-                      ? [Colors.red.shade600, Colors.red.shade400]
-                      : [Colors.blueGrey.shade800, Colors.blueGrey.shade600],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                color: _isPressed
+                    ? (isSpecial ? Colors.red.shade300 : Colors.grey.shade700)
+                    : (isSpecial ? Colors.redAccent.shade200 : Colors.grey.shade800),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _isPressed ? Theme.of(context).primaryColorDark.withOpacity(0.2) : Colors.transparent,
+                  width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(12.0),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: Offset(2, 4),
-                  ),
-                ],
               ),
-              width: widget.letter == 'delete' || widget.letter == 'clean'
-                  ? widget.buttonSize * 1.5
-                  : widget.buttonSize,
-              height: widget.buttonSize + 12,
               child: Center(
-                child: widget.letter == 'delete'
-                    ? const Icon(Icons.backspace, color: Colors.white, size: 24)
-                    : widget.letter == 'clean'
-                        ? const Icon(Icons.cleaning_services, color: Colors.white, size: 24)
-                        : Text(
-                            widget.letter,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                child: isSpecial
+                    ? Icon(
+                        widget.letter == 'delete'
+                            ? Icons.backspace_outlined
+                            : Icons.cleaning_services_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      )
+                    : Text(
+                        widget.letter,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           );

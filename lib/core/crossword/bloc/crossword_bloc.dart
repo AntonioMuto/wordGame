@@ -196,7 +196,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
 
       // Parsing dei dati in una struttura List<List<CrosswordCell>>
       final crosswordData = _parseCrosswordData(jsonData);
-
+      await Future.delayed(const Duration(seconds: 1));
       // Emetti lo stato con i dati ricevuti
       emit(CrosswordLoaded(crosswordData: crosswordData));
     } else {
