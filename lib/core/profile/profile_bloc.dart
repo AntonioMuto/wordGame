@@ -13,14 +13,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   }
 
   Future<void> _onFetchProfileData(FetchProfileData event, Emitter<ProfileState> emit) async {
-    print("ADWDIOAWDOAWIDINW");
     emit(ProfileInitial());
     try {
       final url = Uri.parse('https://raw.githubusercontent.com/AntonioMuto/wordGame/refs/heads/main/profile_data.json');
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
-        print(response.body);
         emit(ProfileLoaded(
           username: jsonData['username'],
           token: jsonData['token']

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TimerCircle extends StatefulWidget {
-  final Duration duration; // Durata passata al widget
+  final Duration duration; 
 
   const TimerCircle({Key? key, required this.duration}) : super(key: key);
 
@@ -17,8 +17,8 @@ class _TimerCircleState extends State<TimerCircle> with SingleTickerProviderStat
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: widget.duration, // Durata passata dal widget
-    )..forward(); // Avvia il timer immediatamente
+      duration: widget.duration, 
+    )..forward(); 
   }
 
   @override
@@ -28,35 +28,57 @@ class _TimerCircleState extends State<TimerCircle> with SingleTickerProviderStat
   }
 
   String _formatTime(Duration duration) {
-  int hours = duration.inHours;
-  int minutes = duration.inMinutes % 60;
-  int seconds = duration.inSeconds % 60;
-  int centiseconds = (duration.inMilliseconds % 1000) ~/ 10; // Centesimi di secondo
+    int hours = duration.inHours;
+    int minutes = duration.inMinutes % 60;
+    int seconds = duration.inSeconds % 60;
+    int centiseconds = (duration.inMilliseconds % 1000) ~/ 10; 
 
-  // Se il tempo è inferiore a 1 secondo, mostra "00:centesimi"
-  if (duration.inMilliseconds < 1000) {
-    return "00:${centiseconds.toString().padLeft(2, '0')}";
+    
+    if (duration.inMilliseconds < 1000) {
+      return "00:${centiseconds.toString().padLeft(2, '0')}";
+    }
+
+    
+    if (minutes > 0) {
+      return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+    }
+
+    
+    else {
+      return "${seconds.toString().padLeft(2, '0')}:${centiseconds.toString().padLeft(2, '0')}";
+    }
   }
-
-  // Se la durata è maggiore di 1 minuto, mostra mm:ss
-  if (minutes > 0) {
-    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
-  }
-
-  // Se siamo sotto il minuto, mostra ss:ss (secondi e centesimi)
-  else {
-    return "${seconds.toString().padLeft(2, '0')}:${centiseconds.toString().padLeft(2, '0')}";
-  }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
+        
         final remainingDuration = widget.duration * (1 - _controller.value);
-        final timeString = _formatTime(remainingDuration); // Tempo formattato
+        final timeString = _formatTime(remainingDuration); 
+
+        
+        Color progressColor;
+        Color textColor;
+
+        
+        if (remainingDuration.inSeconds >= widget.duration.inSeconds * 0.5) {
+          progressColor = Colors.blueAccent; 
+        } else if (remainingDuration.inSeconds > 10) {
+          progressColor = Colors.orange; 
+        } else {
+          progressColor = Colors.red; 
+        }
+
+        
+        if (remainingDuration.inSeconds >= widget.duration.inSeconds * 0.5) {
+          textColor = Colors.white; 
+        } else if (remainingDuration.inSeconds > 10) {
+          textColor = Colors.orange; 
+        } else {
+          textColor = Colors.red; 
+        }
 
         return Stack(
           alignment: Alignment.center,
@@ -68,15 +90,15 @@ class _TimerCircleState extends State<TimerCircle> with SingleTickerProviderStat
                 value: _controller.value,
                 strokeWidth: 5,
                 backgroundColor: Colors.grey.shade300,
-                color: Colors.blueAccent,
+                color: progressColor, 
               ),
             ),
             Text(
-              timeString, // Mostriamo il tempo formattato
-              style: const TextStyle(
+              timeString, 
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: textColor, 
               ),
             ),
           ],

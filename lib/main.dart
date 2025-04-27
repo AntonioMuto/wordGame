@@ -19,9 +19,9 @@ import 'core/theme/bloc/theme_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  MobileAds.instance.updateRequestConfiguration(
-    RequestConfiguration(testDeviceIds: ['125EBE817C05F18F9575E85ECBC6C7B3']),
-  );
+  // MobileAds.instance.updateRequestConfiguration(
+  //   RequestConfiguration(testDeviceIds: ['125EBE817C05F18F9575E85ECBC6C7B3']),
+  // );
   unawaited(MobileAds.instance.initialize());
   PlaysoundsController();
   runApp(const MyApp());

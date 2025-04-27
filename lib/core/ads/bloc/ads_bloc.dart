@@ -37,7 +37,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
 
     final bannerAd = BannerAd(
       size: AdSize.banner,
-      adUnitId: 'ca-app-pub-6948080890496729/2835459661',
+      adUnitId: 'ca-app-pub-6948080890496729/9081056431',
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
@@ -51,6 +51,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
           });
         },
         onAdFailedToLoad: (ad, error) {
+          print('Banner ad failed to load: $error');
           ad.dispose();
           emit(BannerAdFailed(error.toString()));
           completer.completeError(error);
@@ -107,6 +108,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
           );
         },
         onAdFailedToLoad: (LoadAdError error) {
+          print("AD FLAILED TO LOAD: $error");
           emit(InterstitialAdFailed(error.toString()));
           completer.completeError(error);
         },

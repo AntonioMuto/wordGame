@@ -217,7 +217,7 @@ class AnagramPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const TimerCircle(
-            duration: Duration(seconds: 12),
+            duration: Duration(seconds: 60),
           ),
           const SizedBox(height: 12),
           Text(

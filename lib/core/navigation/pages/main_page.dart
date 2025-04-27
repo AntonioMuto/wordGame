@@ -184,7 +184,6 @@ class _CustomAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, state) {
-        print(state);
         if (state is ProfileLoaded) {
           var profileData = state;
           return Padding(

@@ -38,7 +38,6 @@ class AnagramBloc extends Bloc<AnagramEvent, AnagramState> {
           currentWord: initialCurrentWord,
           usedLetters: {}, // Mappa vuota iniziale
         ));
-        print('AnagramLoaded emitted: $correctWords');
       } else {
         throw Exception('Errore nella risposta del server: ${response.statusCode}');
       }
