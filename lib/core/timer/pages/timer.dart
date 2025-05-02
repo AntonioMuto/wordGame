@@ -1,104 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class TimerCircle extends StatefulWidget {
-  final Duration duration; 
+import '../bloc/timer_bloc.dart';
 
-  const TimerCircle({Key? key, required this.duration}) : super(key: key);
+class TimerCircle extends StatelessWidget {
+  final int durationInMilliseconds;
+  final void Function() onTimerComplete;
 
-  @override
-  _TimerCircleState createState() => _TimerCircleState();
-}
-
-class _TimerCircleState extends State<TimerCircle> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration, 
-    )..forward(); 
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const TimerCircle({super.key, required this.durationInMilliseconds, required this.onTimerComplete});
 
   String _formatTime(Duration duration) {
-    int hours = duration.inHours;
-    int minutes = duration.inMinutes % 60;
+    int minutes = duration.inMinutes;
     int seconds = duration.inSeconds % 60;
-    int centiseconds = (duration.inMilliseconds % 1000) ~/ 10; 
+    int centiseconds = (duration.inMilliseconds % 1000) ~/ 10;
 
-    
     if (duration.inMilliseconds < 1000) {
       return "00:${centiseconds.toString().padLeft(2, '0')}";
-    }
-
-    
-    if (minutes > 0) {
+    } else if (minutes > 0) {
       return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
-    }
-
-    
-    else {
+    } else {
       return "${seconds.toString().padLeft(2, '0')}:${centiseconds.toString().padLeft(2, '0')}";
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        
-        final remainingDuration = widget.duration * (1 - _controller.value);
-        final timeString = _formatTime(remainingDuration); 
+    context.read<TimerBloc>().add(TimerStarted(durationInMilliseconds));
 
-        
+    return BlocBuilder<TimerBloc, TimerState>(
+      builder: (context, state) {
+        if (state is TimerRunComplete) {
+          onTimerComplete();
+        }
+        final remainingDuration = Duration(milliseconds: state.duration);
+
+        final progress = state is TimerRunInProgress
+            ? remainingDuration.inMilliseconds / durationInMilliseconds
+            : 0.0;
+
         Color progressColor;
         Color textColor;
 
-        
-        if (remainingDuration.inSeconds >= widget.duration.inSeconds * 0.5) {
-          progressColor = Colors.blueAccent; 
+        // Imposta il colore del progresso
+        if (remainingDuration.inSeconds >= 30) {
+          progressColor = Colors.blueAccent;
+          textColor = Colors.white;
         } else if (remainingDuration.inSeconds > 10) {
-          progressColor = Colors.orange; 
+          progressColor = Colors.orange;
+          textColor = Colors.orange;
         } else {
-          progressColor = Colors.red; 
-        }
-
-        
-        if (remainingDuration.inSeconds >= widget.duration.inSeconds * 0.5) {
-          textColor = Colors.white; 
-        } else if (remainingDuration.inSeconds > 10) {
-          textColor = Colors.orange; 
-        } else {
-          textColor = Colors.red; 
+          progressColor = Colors.red;
+          textColor = Colors.red;
         }
 
         return Stack(
           alignment: Alignment.center,
           children: [
             SizedBox(
-              width: 120,
-              height: 120,
-              child: CircularProgressIndicator(
-                value: _controller.value,
-                strokeWidth: 5,
-                backgroundColor: Colors.grey.shade300,
-                color: progressColor, 
-              ),
-            ),
+                width: 120,
+                height: 120,
+                child: Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.rotationY(
+                      3.14159), // oppure Matrix4.diagonal3Values(-1, 1, 1)
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 5,
+                    backgroundColor: Colors.grey.shade300,
+                    color: progressColor,
+                  ),
+                )),
             Text(
-              timeString, 
+              _formatTime(remainingDuration),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: textColor, 
+                color: textColor,
               ),
             ),
           ],

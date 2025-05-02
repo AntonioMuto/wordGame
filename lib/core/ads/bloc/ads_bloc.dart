@@ -37,7 +37,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
 
     final bannerAd = BannerAd(
       size: AdSize.banner,
-      adUnitId: 'ca-app-pub-6948080890496729/9081056431',
+      adUnitId: 'ca-app-pub-6948080890496729/2835459661',
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
@@ -75,7 +75,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
 
     InterstitialAd.load(
       adUnitId:
-          'ca-app-pub-6948080890496729/6753258029', // Il tuo Interstitial Ad Unit ID
+          'ca-app-pub-6948080890496729/8313751704', // Il tuo Interstitial Ad Unit ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {

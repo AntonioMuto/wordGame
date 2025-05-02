@@ -5,7 +5,7 @@ part 'timer_event.dart';
 part 'timer_state.dart';
 
 class TimerBloc extends Bloc<TimerEvent, TimerState> {
-  static const int _tickDuration = 1; // un tick al secondo
+  static const int _tickDuration = 10; // 10 ms
   Timer? _timer;
 
   TimerBloc() : super(const TimerInitial(0)) {
@@ -14,13 +14,14 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     on<TimerReset>(_onReset);
     on<TimerTicked>(_onTicked);
     on<TimerAdd>(_onAdd);
+    on<TimerRestart>(_onNewRestart);
     on<TimerSubtract>(_onSubtract);
   }
 
   void _onStarted(TimerStarted event, Emitter<TimerState> emit) {
     _timer?.cancel();
     emit(TimerRunInProgress(event.duration));
-    _timer = Timer.periodic(const Duration(seconds: _tickDuration), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: _tickDuration), (timer) {
       add(const TimerTicked());
     });
   }
@@ -46,11 +47,19 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   void _onAdd(TimerAdd event, Emitter<TimerState> emit) {
-    emit(TimerRunInProgress(state.duration + event.seconds));
+    emit(TimerRunInProgress(state.duration + event.milliseconds));
+  }
+
+  void _onNewRestart(TimerRestart event, Emitter<TimerState> emit) {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: _tickDuration), (timer) {
+      add(const TimerTicked());
+    });
+    emit(TimerRunInProgress(state.duration + event.milliseconds));
   }
 
   void _onSubtract(TimerSubtract event, Emitter<TimerState> emit) {
-    final updatedDuration = (state.duration - event.seconds).clamp(0, double.infinity).toInt();
+    final updatedDuration = (state.duration - event.milliseconds).clamp(0, double.infinity).toInt();
     if (updatedDuration == 0) {
       _timer?.cancel();
       emit(const TimerRunComplete());

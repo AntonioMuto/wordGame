@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:word_game/core/ads/bloc/ads_bloc.dart';
 import 'package:word_game/core/anagram/bloc/anagram_bloc.dart';
+import 'package:word_game/core/dialog/bloc/dialog_bloc.dart';
 import 'package:word_game/core/timer/pages/timer.dart';
 
 import '../../timer/bloc/timer_bloc.dart';
@@ -18,101 +19,138 @@ class AnagramPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => AnagramBloc()..add(FetchAnagramData())),
-          BlocProvider(create: (_) => AdsBloc()..add(LoadBannerAdEvent())),
-          BlocProvider(create: (_) => TimerBloc()),
-        ],
-        child: BlocListener<AnagramBloc, AnagramState>(
-          listener: (context, state) {
-            if (state is AnagramLoaded && state.completed) {
-              context.read<TimerBloc>().add(TimerStopped());
-              _showCompletionDialog(context);
-            }
-          },
-          child: PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, result) {
-              if (!didPop) {
-                _showExitConfirmationDialog(context);
-              }
-            },
-            child: Scaffold(
-              extendBodyBehindAppBar: true,
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: IconButton(
-                  icon: Icon(Icons.arrow_back,
-                      color: Theme.of(context).primaryColorDark),
-                  onPressed: () => _showExitConfirmationDialog(context),
-                ),
-                title: Text(
-                  'Anagramma - Livello $level',
-                  style: TextStyle(
-                    color: Theme.of(context).primaryColorDark,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    fontSize: 22,
-                  ),
-                ),
-                centerTitle: true,
+      providers: [
+        BlocProvider(create: (_) => AnagramBloc()..add(FetchAnagramData())),
+        BlocProvider(create: (_) => AdsBloc()..add(LoadBannerAdEvent())),
+        BlocProvider(create: (_) => TimerBloc()),
+        BlocProvider(create: (_) => DialogBloc()),
+      ],
+      child: Builder(
+        // 👈 questo è fondamentale!
+        builder: (context) {
+          return MultiBlocListener(
+            listeners: [
+              BlocListener<AnagramBloc, AnagramState>(
+                listener: (context, state) {
+                  if (state is AnagramLoaded && state.completed) {
+                    context.read<TimerBloc>().add(TimerStopped());
+                    context
+                        .read<DialogBloc>()
+                        .add(ShowDialogEvent(DialogType.completion));
+                  }
+                },
               ),
-              body: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-                child: SafeArea(
-                  child: BlocBuilder<AnagramBloc, AnagramState>(
-                      builder: (context, state) {
-                    var started = false;
-                    if (state is AnagramLoaded && state.started) {
-                      started = state.started;
+              BlocListener<DialogBloc, DialogState>(
+                listener: (context, state) {
+                  if (state is DialogVisible) {
+                    switch (state.type) {
+                      case DialogType.completion:
+                        _showCompletionDialog(context);
+                        break;
+                      case DialogType.timeout:
+                        _showTimeoutDialog(context);
+                        break;
+                      case DialogType.exitConfirmation:
+                        _showExitConfirmationDialog(context);
+                        break;
                     }
-                    return Column(
-                      children: [
-                        const SizedBox(height: 50),
-                        _buildCurrentWordGrid(context),
-                        if (started) ...[
-                          const SizedBox(height: 60),
-                          _buildHistoryGrid(context),
-                          const SizedBox(height: 20),
-                          Expanded(child: _buildLetterGrid(context)),
-                          _buildControlButtons(context),
-                          const SizedBox(height: 15),
-                        ],
-                        if (!started) ...[
-                          const Spacer(),
-                          _modernButton(
-                            context,
-                            icon: Icons.play_arrow,
-                            text: 'START',
-                            color: Colors
-                                .green, // Puoi scegliere un colore più caldo per "Cancella"
-                            onPressed: () {
-                              context
-                                  .read<AnagramBloc>()
-                                  .add(StartGameEvent());
-                            },
-                          ),
-                          const Spacer(),
-                        ],
-                        _buildBannerAd(context),
+                  }
+                  if (state is DialogHidden) {
+                    Navigator.of(context, rootNavigator: true).maybePop();
+                  }
+                },
+              ),
+            ],
+            child: PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) {
+                if (!didPop) {
+                  context
+                      .read<DialogBloc>()
+                      .add(ShowDialogEvent(DialogType.exitConfirmation));
+                }
+              },
+              child: Scaffold(
+                extendBodyBehindAppBar: true,
+                appBar: AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: Icon(Icons.arrow_back,
+                        color: Theme.of(context).primaryColorDark),
+                    onPressed: () => context
+                        .read<DialogBloc>()
+                        .add(ShowDialogEvent(DialogType.exitConfirmation)),
+                  ),
+                  title: Text(
+                    'Anagramma - Livello $level',
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColorDark,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      fontSize: 22,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).primaryColor,
+                        Theme.of(context).primaryColor
                       ],
-                    );
-                  }),
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: BlocBuilder<AnagramBloc, AnagramState>(
+                      builder: (context, state) {
+                        var started = false;
+                        if (state is AnagramLoaded && state.started) {
+                          started = state.started;
+                        }
+                        return Column(
+                          children: [
+                            const SizedBox(height: 50),
+                            _buildCurrentWordGrid(context),
+                            if (started) ...[
+                              const SizedBox(height: 60),
+                              _buildHistoryGrid(context),
+                              const SizedBox(height: 20),
+                              Expanded(child: _buildLetterGrid(context)),
+                              _buildControlButtons(context),
+                              const SizedBox(height: 15),
+                            ],
+                            if (!started) ...[
+                              const Spacer(),
+                              _modernButton(
+                                context,
+                                icon: Icons.play_arrow,
+                                text: 'START',
+                                color: Colors.green,
+                                onPressed: () {
+                                  context
+                                      .read<AnagramBloc>()
+                                      .add(StartGameEvent());
+                                },
+                              ),
+                              const Spacer(),
+                            ],
+                            _buildBannerAd(context),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ));
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildCurrentWordGrid(BuildContext context) {
@@ -220,8 +258,15 @@ class AnagramPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const TimerCircle(
-            duration: Duration(seconds: 60),
+          TimerCircle(
+            durationInMilliseconds: 6000,
+            onTimerComplete: () {
+              Future.delayed(Duration.zero, () {
+                context
+                    .read<DialogBloc>()
+                    .add(ShowDialogEvent(DialogType.timeout));
+              });
+            },
           ),
           const SizedBox(height: 12),
           Text(
@@ -480,6 +525,134 @@ class AnagramPage extends StatelessWidget {
                               });
                             },
                             child: const Text('Raddoppia'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTimeoutDialog(BuildContext context) {
+    print(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey.shade900.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade700),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.timer_outlined, color: Colors.red, size: 40),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Tempo scaduto!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Vuoi raddoppiare le ricompense guardando un annuncio?',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: BorderSide(color: Colors.white70),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Chiudi'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.amber.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              final adBloc = context.read<AdsBloc>();
+                              adBloc.add(LoadRewardedAdEvent());
+
+                              late StreamSubscription<AdsState> subscription;
+
+                              subscription = adBloc.stream.listen((adState) {
+                                if (adState is RewardedAdLoaded) {
+                                  adBloc.add(ShowRewardedAdEvent());
+                                } else if (adState is RewardedAdClosed) {
+                                  Navigator.of(dialogContext).pop();
+                                  context
+                                      .read<TimerBloc>()
+                                      .add(const TimerRestart(30000));
+                                } else if (adState is RewardedAdFailed) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Errore caricamento annuncio: ${adState.error}'),
+                                    ),
+                                  );
+                                  Navigator.of(dialogContext).pop();
+                                  subscription.cancel();
+                                }
+                              });
+                            },
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                SizedBox(width: 8),
+                                Text('+ 30s'),
+                              ],
+                            ),
                           ),
                         ),
                       ],

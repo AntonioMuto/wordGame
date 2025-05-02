@@ -5,7 +5,7 @@ abstract class TimerEvent {
 }
 
 class TimerStarted extends TimerEvent {
-  final int duration;
+  final int duration; // Ora in millisecondi
   const TimerStarted(this.duration);
 }
 
@@ -22,11 +22,16 @@ class TimerTicked extends TimerEvent {
 }
 
 class TimerAdd extends TimerEvent {
-  final int seconds;
-  const TimerAdd(this.seconds);
+  final int milliseconds; // Rinominato da "seconds" a "milliseconds"
+  const TimerAdd(this.milliseconds);
+}
+
+class TimerRestart extends TimerEvent {
+  final int milliseconds;
+  const TimerRestart(this.milliseconds);
 }
 
 class TimerSubtract extends TimerEvent {
-  final int seconds;
-  const TimerSubtract(this.seconds);
+  final int milliseconds; // Rinominato da "seconds" a "milliseconds"
+  const TimerSubtract(this.milliseconds);
 }
