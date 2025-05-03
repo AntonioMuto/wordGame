@@ -10,3 +10,9 @@ class DecreaseTokenEvent extends ProfileEvent {
 
   DecreaseTokenEvent(this.token);
 }
+
+class IncreaseTokenEvent extends ProfileEvent {
+  final int token;
+
+  IncreaseTokenEvent(this.token);
+}

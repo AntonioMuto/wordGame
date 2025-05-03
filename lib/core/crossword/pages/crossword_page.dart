@@ -33,6 +33,7 @@ class CrosswordPage extends StatelessWidget {
         listener: (context, state) {
           if (state is CrosswordLoaded && state.completed) {
             _showCompletionDialog(context);
+            context.read<ProfileBloc>().add(IncreaseTokenEvent(5));
           }
         },
         child: PopScope(
@@ -429,6 +430,7 @@ class CrosswordPage extends StatelessWidget {
                               late StreamSubscription<AdsState> subscription;
 
                               subscription = adBloc.stream.listen((adState) {
+                                print(adState);
                                 if (adState is RewardedAdLoaded) {
                                   adBloc.add(ShowRewardedAdEvent());
                                 } else if (adState is RewardedAdClosed) {
@@ -440,6 +442,12 @@ class CrosswordPage extends StatelessWidget {
                                       content: Text(
                                           'Errore caricamento annuncio: ${adState.error}'),
                                     ),
+                                  );
+                                  Navigator.of(dialogContext).pop();
+                                  subscription.cancel();
+                                } else if (adState is RewardedAdCompleted) {
+                                  context.read<ProfileBloc>().add(
+                                    IncreaseTokenEvent(5)
                                   );
                                   Navigator.of(dialogContext).pop();
                                   subscription.cancel();

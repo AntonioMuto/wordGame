@@ -162,10 +162,6 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
               _rewardedAd = null;
               completer.complete();
             },
-            onAdShowedFullScreenContent: (ad) {
-              // Qui puoi dare una ricompensa all'utente
-              // Esegui qualcosa come dare monete o altro
-            },
           );
         },
         onAdFailedToLoad: (LoadAdError error) {

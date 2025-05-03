@@ -54,3 +54,4 @@ class RewardedAdFailed extends AdsState {
 }
 
 class RewardedAdClosed extends AdsState {}
+class RewardedAdCompleted extends AdsState {}

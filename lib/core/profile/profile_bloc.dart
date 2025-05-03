@@ -11,6 +11,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc() : super(ProfileInitial()) {
     on<FetchProfileData>(_onFetchProfileData);
     on<DecreaseTokenEvent>(_onDecreaseToken);
+    on<IncreaseTokenEvent>(_onIncreaseToken);
   }
 
   Future<void> _onFetchProfileData(
@@ -39,6 +40,14 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     if (state is ProfileLoaded) {
       final currentState = state as ProfileLoaded;
       emit(currentState.copyWith(token: currentState.token - event.token));
+    }
+  }
+
+  Future<void> _onIncreaseToken(
+      IncreaseTokenEvent event, Emitter<ProfileState> emit) async {
+    if (state is ProfileLoaded) {
+      final currentState = state as ProfileLoaded;
+      emit(currentState.copyWith(token: currentState.token + event.token));
     }
   }
 }
