@@ -4,3 +4,9 @@ part of 'profile_bloc.dart';
 sealed class ProfileEvent {}
 
 class FetchProfileData extends ProfileEvent {}
+
+class DecreaseTokenEvent extends ProfileEvent {
+  final int token;
+
+  DecreaseTokenEvent(this.token);
+}

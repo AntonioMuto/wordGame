@@ -14,6 +14,7 @@ final class CrosswordLoaded extends CrosswordState {
   final bool isHorizontal;
   final String? definition;
   final bool completed;
+  final bool hintedCorrectly;
 
   CrosswordLoaded({
     required this.crosswordData,
@@ -23,7 +24,8 @@ final class CrosswordLoaded extends CrosswordState {
     this.highlightedCellsSecondary = const [],
     this.isHorizontal = true, // Di default orizzontale
     this.definition,
-    this.completed = false
+    this.completed = false,
+    this.hintedCorrectly = false
   });
 
   CrosswordLoaded copyWith({
@@ -34,7 +36,8 @@ final class CrosswordLoaded extends CrosswordState {
     List<List<int>>? highlightedCellsSecondary,
     bool? isHorizontal,
     String? definition,
-    bool? completed
+    bool? completed,
+    bool? hintedCorrectly
   }) {
     return CrosswordLoaded(
       crosswordData: crosswordData ?? this.crosswordData,
@@ -44,7 +47,8 @@ final class CrosswordLoaded extends CrosswordState {
       highlightedCellsSecondary: highlightedCellsSecondary ?? this.highlightedCellsSecondary,
       isHorizontal: isHorizontal ?? this.isHorizontal,
       definition: definition ?? this.definition,
-      completed: completed ?? this.completed
+      completed: completed ?? this.completed,
+      hintedCorrectly: hintedCorrectly ?? this.hintedCorrectly
     );
   }
 }

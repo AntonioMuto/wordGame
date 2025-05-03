@@ -39,3 +39,7 @@ class ToggleDialogEvent extends CrosswordEvent {
 
   ToggleDialogEvent({required this.isDialogOpen});
 }
+
+class ToggleHintEvent extends CrosswordEvent {}
+
+class ResetHintEvent extends CrosswordEvent {}

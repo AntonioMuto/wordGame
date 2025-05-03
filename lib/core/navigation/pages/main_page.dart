@@ -58,8 +58,6 @@ class _MainPageState extends State<MainPage> {
         BlocProvider(
             create: (context) => AdsBloc()
               ..add(LoadBannerAdEvent())), // <-- Add AdsBloc provider here
-        BlocProvider(
-            create: (context) => ProfileBloc()..add(FetchProfileData())),
       ],
       child: Scaffold(
         body: SafeArea(

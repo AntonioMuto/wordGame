@@ -13,6 +13,17 @@ final class ProfileLoaded extends ProfileState {
     required this.username,
     required this.token
   });
+
+  ProfileLoaded copyWith({
+    String? username,
+    int? token
+  }) {
+    return ProfileLoaded(
+      username: username ?? this.username,
+      token: token ?? this.token
+    );
+  }
+
 }
 
 class ProfileError extends ProfileState {

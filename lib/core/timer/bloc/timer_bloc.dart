@@ -19,12 +19,14 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   void _onStarted(TimerStarted event, Emitter<TimerState> emit) {
+  if (state is! TimerRunInProgress) { // Previene riavvii multipli
     _timer?.cancel();
     emit(TimerRunInProgress(event.duration));
     _timer = Timer.periodic(const Duration(milliseconds: _tickDuration), (timer) {
       add(const TimerTicked());
     });
   }
+}
 
   void _onStopped(TimerStopped event, Emitter<TimerState> emit) {
     _timer?.cancel();
@@ -51,11 +53,10 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   }
 
   void _onNewRestart(TimerRestart event, Emitter<TimerState> emit) {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: _tickDuration), (timer) {
-      add(const TimerTicked());
-    });
-    emit(TimerRunInProgress(state.duration + event.milliseconds));
+    if (state is TimerRunInProgress) { // Solo se il timer è attivo
+      final newDuration = state.duration + event.milliseconds;
+      emit(TimerRunInProgress(newDuration));
+    }
   }
 
   void _onSubtract(TimerSubtract event, Emitter<TimerState> emit) {

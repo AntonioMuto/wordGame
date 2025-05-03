@@ -35,7 +35,9 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => ThemeBloc()),
-        BlocProvider(create: (context) => NavigationBloc())
+        BlocProvider(create: (context) => NavigationBloc()),
+        BlocProvider(
+            create: (context) => ProfileBloc()..add(FetchProfileData()))
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {

@@ -10,26 +10,35 @@ part 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc() : super(ProfileInitial()) {
     on<FetchProfileData>(_onFetchProfileData);
+    on<DecreaseTokenEvent>(_onDecreaseToken);
   }
 
-  Future<void> _onFetchProfileData(FetchProfileData event, Emitter<ProfileState> emit) async {
+  Future<void> _onFetchProfileData(
+      FetchProfileData event, Emitter<ProfileState> emit) async {
     emit(ProfileInitial());
     try {
-      final url = Uri.parse('https://raw.githubusercontent.com/AntonioMuto/wordGame/refs/heads/main/profile_data.json');
+      final url = Uri.parse(
+          'https://raw.githubusercontent.com/AntonioMuto/wordGame/refs/heads/main/profile_data.json');
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         emit(ProfileLoaded(
-          username: jsonData['username'],
-          token: jsonData['token']
-        ));
+            username: jsonData['username'], token: jsonData['token']));
       } else {
-        throw Exception('Errore nella risposta del server: ${response.statusCode}');
+        throw Exception(
+            'Errore nella risposta del server: ${response.statusCode}');
       }
     } catch (e) {
       emit(ProfileError('Errore nel caricamento dei dati: $e'));
       print(e);
     }
-  
+  }
+
+  Future<void> _onDecreaseToken(
+      DecreaseTokenEvent event, Emitter<ProfileState> emit) async {
+    if (state is ProfileLoaded) {
+      final currentState = state as ProfileLoaded;
+      emit(currentState.copyWith(token: currentState.token - event.token));
+    }
   }
 }
