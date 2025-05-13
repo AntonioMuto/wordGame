@@ -1,77 +1,165 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:word_game/core/home/pages/home_page.dart';
+import 'package:word_game/core/navigation/pages/main_page.dart';
 import 'package:word_game/core/sign_in/bloc/sign_in_bloc.dart';
 
 class SignInPage extends StatelessWidget {
   SignInPage({super.key});
+
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: usernameController,
-              decoration: InputDecoration(labelText: "Username"),
-            ),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            BlocBuilder<SignInBloc, SignInState>(
-              builder: (context, state) {
-                return Column(
-              children: [
-                // Messaggio di errore, visibile solo se c'è un errore
-                if (state is SignInFailure)
-                  Text(
-                    state.errorMessage,
-                    style: TextStyle(color: Colors.red),
-                  ),
-                SizedBox(height: 10), // Spaziatura tra il messaggio e il pulsante
+    final theme = Theme.of(context);
 
-                // Mostra il pulsante o il caricamento
-                if (state is SignInLoading)
-                  CircularProgressIndicator( color: Colors.white,)
-                else
-                  ElevatedButton(
-                    onPressed: () {
-                      final username = usernameController.text;
-                      final password = passwordController.text;
-                      context
-                          .read<SignInBloc>()
-                          .add(SignInSubmitted(username, password));
-                    },
-                    child: Text("Login", style: TextStyle(color: Colors.white)),
-                  ),
-              ],
-            );
-              },
-            ),
-            BlocListener<SignInBloc, SignInState>(
+    return Scaffold(
+      backgroundColor: theme.colorScheme.background.withOpacity(0.1),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: BlocConsumer<SignInBloc, SignInState>(
               listener: (context, state) {
                 if (state is SignInSuccess) {
-                  // Naviga alla HomePage
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const HomePage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const MainPage()),
                   );
                 }
               },
-              child: Container(),
-            )
-          ],
+              builder: (context, state) {
+                // Gestione errori specifici
+                final isFailure = state is SignInFailure;
+                final wrongPassword =
+                    isFailure ? state.wrongPassword ?? false : false;
+                final userNotFound =
+                    isFailure ? state.userNotFound ?? false : false;
+                final errorMessage =
+                    isFailure ? state.errorMessage : null;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.gamepad_rounded,
+                        size: 72, color: theme.colorScheme.primary),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Benvenuto in WordGame",
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    _buildInputField(
+                      controller: usernameController,
+                      label: "Username",
+                      icon: Icons.person,
+                      theme: theme,
+                      showError: userNotFound,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInputField(
+                      controller: passwordController,
+                      label: "Password",
+                      icon: Icons.lock,
+                      theme: theme,
+                      obscure: true,
+                      showError: wrongPassword,
+                    ),
+                    const SizedBox(height: 24),
+                    if (errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          errorMessage,
+                          style: TextStyle(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: state is SignInLoading
+                          ? const CircularProgressIndicator()
+                          : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color.fromARGB(255, 30, 121, 195),
+                                  foregroundColor: theme.colorScheme.onPrimary,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 4,
+                                ),
+                                onPressed: () {
+                                  context.read<SignInBloc>().add(
+                                        SignInSubmitted(
+                                          usernameController.text,
+                                          passwordController.text,
+                                        ),
+                                      );
+                                },
+                                child: Text(
+                                  "Accedi",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).primaryColorDark,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required ThemeData theme,
+    bool obscure = false,
+    bool showError = false,
+    bool showCheck = false,
+  }) {
+    Icon? suffix;
+    if (showError) {
+      suffix = const Icon(Icons.close, color: Colors.red);
+    } else if (showCheck) {
+      suffix = const Icon(Icons.check, color: Colors.green);
+    }
+
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: theme.textTheme.bodyLarge,
+      decoration: InputDecoration(
+        suffixIcon: suffix,
+        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 45, 148, 232)),
+        labelText: label,
+        labelStyle: TextStyle(
+          color: theme.colorScheme.onBackground.withOpacity(0.7),
+        ),
+        filled: true,
+        fillColor: theme.colorScheme.surface.withOpacity(0.9),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        floatingLabelBehavior: FloatingLabelBehavior.never,
       ),
     );
   }

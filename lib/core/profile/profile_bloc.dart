@@ -10,6 +10,7 @@ part 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc() : super(ProfileInitial()) {
     on<FetchProfileData>(_onFetchProfileData);
+    on<EvaluateLoginData>(_onEvaluateProfileData);
     on<DecreaseTokenEvent>(_onDecreaseToken);
     on<IncreaseTokenEvent>(_onIncreaseToken);
   }
@@ -24,7 +25,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         emit(ProfileLoaded(
-            username: jsonData['username'], token: jsonData['token']));
+            username: jsonData['username'], token: jsonData['accessToken'], coins: jsonData['coins']));
       } else {
         throw Exception(
             'Errore nella risposta del server: ${response.statusCode}');
@@ -39,7 +40,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       DecreaseTokenEvent event, Emitter<ProfileState> emit) async {
     if (state is ProfileLoaded) {
       final currentState = state as ProfileLoaded;
-      emit(currentState.copyWith(token: currentState.token - event.token));
+      emit(currentState.copyWith(coins: currentState.coins - event.coins));
     }
   }
 
@@ -47,7 +48,15 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       IncreaseTokenEvent event, Emitter<ProfileState> emit) async {
     if (state is ProfileLoaded) {
       final currentState = state as ProfileLoaded;
-      emit(currentState.copyWith(token: currentState.token + event.token));
+      emit(currentState.copyWith(coins: currentState.coins + event.coins));
+    }
+  }
+
+  Future<void> _onEvaluateProfileData(
+      EvaluateLoginData event, Emitter<ProfileState> emit) async {
+    if (state is ProfileLoaded) {
+      final currentState = state as ProfileLoaded;
+      emit(currentState.copyWith(username: event.username, token: event.token, coins: event.coins));
     }
   }
 }

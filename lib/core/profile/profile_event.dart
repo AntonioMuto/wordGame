@@ -5,14 +5,22 @@ sealed class ProfileEvent {}
 
 class FetchProfileData extends ProfileEvent {}
 
-class DecreaseTokenEvent extends ProfileEvent {
-  final int token;
+class EvaluateLoginData extends ProfileEvent {
+  String? username;
+  String? token;
+  int coins;
 
-  DecreaseTokenEvent(this.token);
+  EvaluateLoginData(this.username, this.token, this.coins);
+}
+
+class DecreaseTokenEvent extends ProfileEvent {
+  final int coins;
+
+  DecreaseTokenEvent(this.coins);
 }
 
 class IncreaseTokenEvent extends ProfileEvent {
-  final int token;
+  final int coins;
 
-  IncreaseTokenEvent(this.token);
+  IncreaseTokenEvent(this.coins);
 }

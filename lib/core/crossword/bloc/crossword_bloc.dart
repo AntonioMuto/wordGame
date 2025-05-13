@@ -95,7 +95,6 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
   void _onInsertLetter(InsertLetterEvent event, Emitter<CrosswordState> emit) {
     if (state is CrosswordLoaded) {
       final loadedState = state as CrosswordLoaded;
-      print(loadedState.highlightedCellsSecondary);
       // Copia immutabile della griglia
       final updatedData = List<List<CrosswordCell>>.from(
         loadedState.crosswordData.map((row) => List<CrosswordCell>.from(row)),
@@ -122,7 +121,6 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
             row = row + 1;
           }
         }
-        print(loadedState.highlightedCellsSecondary);
         var status = checkWords(updatedData, loadedState.highlightedCells,
             loadedState.highlightedCellsSecondary);
 
@@ -396,12 +394,10 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     var completed = true;
 
     // Verifica delle parole secondarie
-    print(highlightedCellsSecondary.length);
     if (highlightedCellsSecondary.length > 1) {
       for (var cell in highlightedCellsSecondary) {
         int row = cell[0];
         int col = cell[1];
-        print("${crosswordData[row][col].value} == ${crosswordData[row][col].answer}");
         if (crosswordData[row][col].value == crosswordData[row][col].answer) {
           crosswordCopySecondary[row][col].isCorrect = true;
         } else {
@@ -486,6 +482,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
             countList.add(i);
           }
         }
+
         final random = Random();
         try {
           int randomNumber = countList[random.nextInt(countList.length)];

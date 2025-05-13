@@ -35,6 +35,10 @@ class CrosswordPage extends StatelessWidget {
             _showCompletionDialog(context);
             context.read<ProfileBloc>().add(IncreaseTokenEvent(5));
           }
+          if (state is CrosswordLoaded && state.hintedCorrectly) {
+            context.read<ProfileBloc>().add(DecreaseTokenEvent(10));
+            context.read<CrosswordBloc>().add(ResetHintEvent());
+          }
         },
         child: PopScope(
           canPop: false,
@@ -63,30 +67,42 @@ class CrosswordPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             if (profileState is ProfileLoaded) ...[
-                              Icon(Icons.monetization_on,
-                                  color: Colors.amber[700], size: 20),
-                              SizedBox(width: 6),
-                              Text(
-                                profileState.token.toString(),
-                                style: TextStyle(
-                                  color: Colors.amber[700],
-                                  fontWeight: FontWeight.bold,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.amber[700]!, width: 2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.monetization_on,
+                                        color: Colors.amber[700], size: 20),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      profileState.coins.toString(),
+                                      style: TextStyle(
+                                        color: Colors.amber[700],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
-                            if(crosswordState is CrosswordLoaded) ...[
+                            if (crosswordState is CrosswordLoaded) ...[
                               IconButton(
                                 icon: Icon(Icons.lightbulb,
-                                    color: crosswordState.highlightedCells.isNotEmpty ? Colors.amber[400] : Colors.grey[400]),
+                                    color: crosswordState
+                                            .highlightedCells.isNotEmpty
+                                        ? Colors.amber[400]
+                                        : Colors.grey[400]),
                                 onPressed: () {
-                                  if(crosswordState.highlightedCells.isEmpty){
+                                  if (crosswordState.highlightedCells.isEmpty) {
                                     return;
                                   }
                                   context.read<CrosswordBloc>().add(ToggleHintEvent());
-                                  if(crosswordState.hintedCorrectly){
-                                    context.read<ProfileBloc>().add(DecreaseTokenEvent(10));
-                                    context.read<CrosswordBloc>().add(ResetHintEvent());
-                                  }
                                 },
                               ),
                             ]
@@ -446,9 +462,9 @@ class CrosswordPage extends StatelessWidget {
                                   Navigator.of(dialogContext).pop();
                                   subscription.cancel();
                                 } else if (adState is RewardedAdCompleted) {
-                                  context.read<ProfileBloc>().add(
-                                    IncreaseTokenEvent(5)
-                                  );
+                                  context
+                                      .read<ProfileBloc>()
+                                      .add(IncreaseTokenEvent(5));
                                   Navigator.of(dialogContext).pop();
                                   subscription.cancel();
                                 }

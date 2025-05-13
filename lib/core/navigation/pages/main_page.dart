@@ -6,6 +6,7 @@ import 'package:word_game/core/home/bloc/home_bloc.dart';
 import 'package:word_game/core/home/pages/home_page.dart';
 import 'package:word_game/core/navigation/bloc/navigation_bloc.dart';
 import 'package:word_game/core/profile/profile_bloc.dart';
+import 'package:word_game/core/sign_in/bloc/sign_in_bloc.dart';
 import 'package:word_game/core/theme/bloc/theme_bloc.dart';
 
 import '../../theme/bloc/theme_state.dart';
@@ -180,9 +181,9 @@ class _CustomAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProfileBloc, ProfileState>(
+    return BlocBuilder<SignInBloc, SignInState>(
       builder: (context, state) {
-        if (state is ProfileLoaded) {
+        if (state is SignInSuccess) {
           var profileData = state;
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
@@ -243,7 +244,7 @@ class _CustomAppBar extends StatelessWidget {
                       Icon(Icons.monetization_on,
                           color: Colors.amber[700], size: 20),
                       SizedBox(width: 6),
-                      Text(profileData.token.toString(),
+                      Text(profileData.coins.toString(),
                           style: TextStyle(
                               color: Colors.amber[700],
                               fontWeight: FontWeight.bold)),

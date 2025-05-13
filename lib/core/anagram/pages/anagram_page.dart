@@ -540,7 +540,6 @@ class AnagramPage extends StatelessWidget {
   }
 
   void _showTimeoutDialog(BuildContext context) {
-    print(context);
     showDialog(
       context: context,
       barrierDismissible: false,

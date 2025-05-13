@@ -43,7 +43,6 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
           selectedRow: 0,
           currentRow: 0
         ));
-        print('FindwordLoaded emitted: $correctWords');
       } else {
         throw Exception('Errore nella risposta del server: ${response.statusCode}');
       }
@@ -90,7 +89,6 @@ class FindwordBloc extends Bloc<FindwordEvent, FindwordState> {
       if(newSelectedCol != null && currentState.selectedCol! > 0) {
         newSelectedCol = currentState.selectedCol! - 1;
       }
-      print(" newSelectedCol: $newSelectedCol, newSelectedRow: $newSelectedRow, newCurrentRow: $newCurrentRow");
       if(newSelectedCol != null && newSelectedCol <= 0) {
         newSelectedCol = 0;
         newSelectedRow = currentState.currentRow;

@@ -36,6 +36,8 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => ThemeBloc()),
         BlocProvider(create: (context) => NavigationBloc()),
+        BlocProvider(create: (context) => SignInBloc()),
+        BlocProvider(create: (context) => HomeBloc()),
         BlocProvider(
             create: (context) => ProfileBloc()..add(FetchProfileData()))
       ],
@@ -43,7 +45,7 @@ class MyApp extends StatelessWidget {
         builder: (context, state) {
           return MaterialApp(
             theme: state.themeData,
-            home: MainPage(), // Usa direttamente la tua pagina principale
+            home: SignInPage(), // Usa direttamente la tua pagina principale
           );
         },
       ),

@@ -7,20 +7,24 @@ final class ProfileInitial extends ProfileState {}
 
 final class ProfileLoaded extends ProfileState {
   String? username;
-  int token;
+  String token;
+  int coins;
 
   ProfileLoaded({
     required this.username,
-    required this.token
+    required this.token,
+    required this.coins
   });
 
   ProfileLoaded copyWith({
     String? username,
-    int? token
+    String? token,
+    int? coins
   }) {
     return ProfileLoaded(
       username: username ?? this.username,
-      token: token ?? this.token
+      token: token ?? this.token,
+      coins: coins ?? this.coins
     );
   }
 
