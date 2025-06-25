@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:word_game/controllers/playSounds_controller.dart';
 import 'package:word_game/data_models/CrossWordCell.dart';
 import 'package:word_game/services/api_handler.dart';
+import 'package:word_game/services/app_eventBus.dart';
 import 'package:word_game/services/cache_handler.dart';
 
 part 'crossword_event.dart';
@@ -508,6 +509,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
         print("Level completed");
         final userData = response.data;
         CacheHandler.updateUserData(userData);
+        AppEventBus.fire("user_data_updated");
       } else {
         print("Error: ${response.statusCode}");
       }
