@@ -7,6 +7,8 @@ import 'dart:convert'; // Per decodificare la risposta JSON
 import 'package:http/http.dart' as http;
 import 'package:word_game/controllers/playSounds_controller.dart';
 import 'package:word_game/data_models/CrossWordCell.dart';
+import 'package:word_game/services/api_handler.dart';
+import 'package:word_game/services/cache_handler.dart';
 
 part 'crossword_event.dart';
 part 'crossword_state.dart';
@@ -92,7 +94,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
   }
 
   // Gestore per l'evento di inserimento di una lettera
-  void _onInsertLetter(InsertLetterEvent event, Emitter<CrosswordState> emit) {
+  Future<void> _onInsertLetter(InsertLetterEvent event, Emitter<CrosswordState> emit) async {
     if (state is CrosswordLoaded) {
       final loadedState = state as CrosswordLoaded;
       // Copia immutabile della griglia
@@ -126,6 +128,7 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
 
         if (status['completed'] == true) {
           PlaysoundsController().playSoundCompletedLevel();
+          await _onCompleteLevel();
         }
         if ((row > 0 && row >= loadedState.crosswordData[row - 1].length) ||
             (col > 0 && col >= loadedState.crosswordData[col - 1].length)) {
@@ -246,27 +249,20 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
   Future<void> _onFetchCrosswordData(
       FetchCrosswordData event, Emitter<CrosswordState> emit) async {
     emit(CrosswordInitial()); // Stato iniziale mentre si attendono i dati
-
     try {
+      final level = event.level;
       // URL dell'API
-      final url = Uri.parse(
-          'https://raw.githubusercontent.com/AntonioMuto/wordGame/refs/heads/main/crossword.json');
-
-      // Chiamata GET all'API
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        // Decodifica la risposta JSON
-        final jsonData = jsonDecode(response.body);
-
-        // Parsing dei dati in una struttura List<List<CrosswordCell>>
+      final url = ApiHandler.get('/crosswords/level/$level');
+      final result = await ApiHandler.get('/crosswords/level/$level');
+      if (result.success) {
+        final jsonData = result.data as Map<String, dynamic>;
         final crosswordData = _parseCrosswordData(jsonData);
-        await Future.delayed(const Duration(seconds: 1));
-        // Emetti lo stato con i dati ricevuti
-        emit(CrosswordLoaded(crosswordData: crosswordData));
+        emit(CrosswordLoaded(crosswordData: crosswordData, level: level));
       } else {
         // Errore nella risposta
+        emit(CrosswordError('Errore nel caricamento dei dati'));
         throw Exception(
-            'Errore nella risposta del server: ${response.statusCode}');
+            'Errore nella risposta del server: ${result.statusCode}');
       }
     } catch (e) {
       // Emette uno stato di errore
@@ -500,6 +496,21 @@ class CrosswordBloc extends Bloc<CrosswordEvent, CrosswordState> {
     if (state is CrosswordLoaded) {
       final loadedState = state as CrosswordLoaded;
       emit(loadedState.copyWith(hintedCorrectly: false));
+    }
+  }
+
+  Future<void> _onCompleteLevel() async {
+    var user = await CacheHandler.getUserProfile() as Map<String, dynamic>;
+    if (state is CrosswordLoaded) {
+      var loadedState = state as CrosswordLoaded;
+      var response = await ApiHandler.post("/levels/complete-level/${user["userId"]}/CrossWord/${loadedState.level}", body: {});
+      if(response.success){
+        print("Level completed");
+        final userData = response.data;
+        CacheHandler.updateUserData(userData);
+      } else {
+        print("Error: ${response.statusCode}");
+      }
     }
   }
 

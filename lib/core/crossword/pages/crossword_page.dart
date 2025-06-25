@@ -23,7 +23,7 @@ class CrosswordPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => CrosswordBloc([])..add(FetchCrosswordData()),
+          create: (_) => CrosswordBloc([])..add(FetchCrosswordData(level: level)),
         ),
         BlocProvider(
           create: (_) => AdsBloc()..add(LoadBannerAdEvent()),

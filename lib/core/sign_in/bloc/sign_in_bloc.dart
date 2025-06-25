@@ -4,6 +4,8 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 import 'package:word_game/services/api_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_game/services/cache_handler.dart';
 
 part 'sign_in_event.dart';
 part 'sign_in_state.dart';
@@ -19,7 +21,7 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
       });
       if (result.success) {
         final userData = result.data;
-        // fai qualcosa, es: salva token, naviga, ecc.
+        CacheHandler.saveUserData(userData['accessToken'], userData);
         emit(SignInSuccess(
             username: userData['username'],
             token: userData['accessToken'],

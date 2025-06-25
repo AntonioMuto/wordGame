@@ -99,7 +99,7 @@ class GameSectionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "LIVELLO ${section.level}",
+                  "LIVELLO ${section.currentLevel}",
                   style: const TextStyle(
                     fontFamily: 'ChunkFive',
                     fontSize: 14,

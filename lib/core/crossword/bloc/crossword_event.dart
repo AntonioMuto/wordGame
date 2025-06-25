@@ -26,7 +26,11 @@ class ResetWordEvent extends CrosswordEvent {
   ResetWordEvent();
 }
 
-class FetchCrosswordData extends CrosswordEvent {}
+class FetchCrosswordData extends CrosswordEvent {
+  final int level;
+
+  FetchCrosswordData({required this.level});
+}
 
 final class CrosswordError extends CrosswordState {
   final String message;

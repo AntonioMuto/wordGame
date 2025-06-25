@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiHandler {
   static const String baseUrl = 'http://betgramapp.xyz';
@@ -10,15 +11,45 @@ class ApiHandler {
     Map<String, String>? headers,
   }) async {
     final url = Uri.parse('$baseUrl$endpoint');
-
+    // final prefs = await SharedPreferences.getInstance();
+    // final token = prefs.getString('token');
     try {
       final response = await http.post(
         url,
         headers: {
           "Content-Type": "application/json",
+          // "Authorization": "Bearer $token",
           ...?headers,
         },
         body: jsonEncode(body),
+      );
+
+      return _handleResponse(response);
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        statusCode: 500,
+        errorMessage: "Errore di rete: $e",
+      );
+    }
+  }
+
+  static Future<ApiResponse> get(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  }) async {
+    final url = Uri.parse('$baseUrl$endpoint');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+          ...?headers,
+        }
       );
 
       return _handleResponse(response);

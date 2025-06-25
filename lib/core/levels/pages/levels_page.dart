@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_game/core/anagram/pages/anagram_page.dart';
 import 'package:word_game/core/crossword/bloc/crossword_bloc.dart';
 import 'package:word_game/core/crossword/pages/crossword_page.dart';
@@ -128,7 +129,7 @@ class LevelsPage extends StatelessWidget {
     );
   }
 
-  _loadGamePage(GameSection section, int index) {
+  _loadGamePage(GameSection section, int index) async {
     switch (section.name) {
       case "Cruciverba":
         return CrosswordPage(level: index + 1);
